@@ -1,0 +1,32 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "C/C++: g++.exe build active file",
+            "command": "D:\\installation folder\\CodeBlocks\\MinGW\\bin\\g++.exe",
+            "args": [
+                "-g",
+                "-std=c++17",
+    		    "-I${workspaceFolder}/include",
+		        "-L${workspaceFolder}/lib",
+		        "${workspaceFolder}/src/\\*.cpp",				
+		        "${workspaceFolder}/src/glad.c",
+                // "-glfw3dll",
+                "D:/Documents/COURSES/4.2/Lab/Graphics/opengl-cpp-template/lib/libglfw3dll.a",
+                "-o",
+                "${workspaceFolder}/myprogram.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
