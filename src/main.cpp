@@ -229,12 +229,12 @@ int main()
 
     set<int> fillSet = {0,1,2,3,4};
     float colors[][3] = {
-        {0, 0, 0},
-        {0, 0, 1},
-        {1, 1, 0},
-        {0,1,0},
-        {1, 0, 1},
-        {1.0f, 0.0f, 0.1f}
+        {0.12, 0.12, 0.12}, // background
+        {40/255.0, 0/255.0, 189/255.0}, // blue
+        {183/255.0, 199/255.0, 6/255.0}, // top yellow
+        {26/255.0, 161/255.0, 5/255.0}, // green
+        {219/255.0, 44/255.0, 173/255.0}, // pink
+        {204/255.0, 112/255.0, 4/255.0} // muddy
     };
 
     // Render loop
@@ -252,7 +252,6 @@ int main()
         glBindVertexArray(VAO);
         int colorLocation = glGetUniformLocation(shaderProgram, "color");
 
-
         // Draw each sublist separately
         for (int i = 0; i < numLists; ++i) {
             
@@ -269,16 +268,16 @@ int main()
             glEnableVertexAttribArray(0);
 
             // Draw lines for each sublist (vertex count / 3 because each point has 3 floats)
-            if(fillSet.find(i) != fillSet.end() || i >= 5)
+            if(fillSet.find(i) != fillSet.end() || i >= 5){
                 glDrawArrays(GL_TRIANGLE_FAN, 0, vertexCounts[i] / 3);
-            else
+            }
+            else{
                 glDrawArrays(GL_LINE_STRIP, 0, vertexCounts[i] / 3);
-            // glDrawArrays(GL_TRIANGLE_FAN, 0, vertexCounts[i] / 3);
+            }
         }
 
         // Unbind for safety
         glBindVertexArray(0);
-
         // GLFW: swap buffers and poll IO events (keys pressed/released, mouse moved, etc.)
         glfwSwapBuffers(window);
         glfwPollEvents();
