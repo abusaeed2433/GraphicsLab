@@ -2,6 +2,10 @@
 
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
 // #include "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\opengl-cpp-template\\include\\glad\\glad.h"
 // #include "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\opengl-cpp-template\\include\\GLFW\\glfw3.h"
 #include <set>
@@ -17,13 +21,23 @@ void processInput(GLFWwindow* window);
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+float translate_X = 0.0;
+float translate_Y = 0.0;
+float rotateAngle = 0.0;
+float scale_X = 1.0;
+float scale_Y = 1.0;
 
-const char* vertexShaderSource = "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"void main()\n"
-"{\n"
-"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-"}\0";
+float translate_X_Cream = 0.0f, translate_Y_Cream = 0.0f, rotateAngle_Cream = 0.0f, scale_X_Cream = 1.0f, scale_Y_Cream = 1.0f;
+float translate_X_Cone = 0.0f, translate_Y_Cone = 0.0f, rotateAngle_Cone = 0.0f, scale_X_Cone = 1.0f, scale_Y_Cone = 1.0f;
+
+const char *vertexShaderSource = "#version 330 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "uniform mat4 transform;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = transform * vec4(aPos, 1.0);\n"
+    "}\0";
+
 const char* fragmentShaderSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
 "uniform vec3 color;\n"  // Define the color uniform
@@ -248,12 +262,54 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Use the shader program
+        glm::mat4 translationMatrix;
+        glm::mat4 rotationMatrix;
+        glm::mat4 scaleMatrix;
+        glm::mat4 modelMatrix;
+        glm::mat4 identityMatrix = glm::mat4(1.0f);
+        translationMatrix = glm::translate(identityMatrix, glm::vec3(translate_X, translate_Y , 0.0f));
+        rotationMatrix = glm::rotate(identityMatrix, glm::radians(rotateAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+        scaleMatrix = glm::scale(identityMatrix, glm::vec3(scale_X, scale_Y, 1.0f));
+        modelMatrix = translationMatrix * rotationMatrix * scaleMatrix;
+        //modelMatrix = rotationMatrix * scaleMatrix;
+
+        glm::mat4 translationMatrixCream;
+        glm::mat4 rotationMatrixCream;
+        glm::mat4 scaleMatrixCream;
+        glm::mat4 modelMatrixCream;
+
+        translationMatrixCream = glm::translate(modelMatrix, glm::vec3(translate_X_Cream, translate_Y_Cream , 0.0f));
+        rotationMatrixCream = glm::rotate(modelMatrix, glm::radians(rotateAngle_Cream), glm::vec3(0.0f, 0.0f, 1.0f));
+        scaleMatrixCream = glm::scale(modelMatrix, glm::vec3(scale_X_Cream, scale_Y_Cream, 1.0f));
+        modelMatrixCream = translationMatrixCream * rotationMatrixCream * scaleMatrixCream;
+
+        glm::mat4 translationMatrixCone;
+        glm::mat4 rotationMatrixCone;
+        glm::mat4 scaleMatrixCone;
+        glm::mat4 modelMatrixCone;
+
+        translationMatrixCone = glm::translate(modelMatrix, glm::vec3(translate_X_Cone, translate_Y_Cone , 0.0f));
+        rotationMatrixCone = glm::rotate(modelMatrix, glm::radians(rotateAngle_Cone), glm::vec3(0.0f, 0.0f, 1.0f));
+        scaleMatrixCone = glm::scale(modelMatrix, glm::vec3(scale_X_Cone, scale_Y_Cone, 1.0f));
+        modelMatrixCone = translationMatrixCone * rotationMatrixCone * scaleMatrixCone;
+        
+        // get matrix's uniform location and set matrix
         glUseProgram(shaderProgram);
+        unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
+        // transformation above
+        
         glBindVertexArray(VAO);
         int colorLocation = glGetUniformLocation(shaderProgram, "color");
 
         // Draw each sublist separately
         for (int i = 0; i < numLists; ++i) {
+
+            if(i < 1){
+                glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(modelMatrixCone));
+            }
+            else{
+                glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(modelMatrixCream));
+            }
             
             int index = (i >= 4) ? 5 : i;
             
@@ -297,8 +353,76 @@ int main()
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow* window)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    float unit = 0.001;
+    float scaleFactor = 0.01f;
+    float rotate_angle = 20;
+
+    if ( glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+    else if( glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS ) // translate-x negative
+        translate_X -= unit;
+    else if( glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS ) // translate-x positive
+        translate_X += unit;
+    else if( glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS ) // translate-y negative
+        translate_Y -= unit;
+    else if( glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS ) // translate-y positive
+        translate_Y += unit;
+    else if( glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS ){ // scale up
+        scale_X += scaleFactor;
+        scale_Y += scaleFactor;
+    }
+    else if( glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS ){ // scale down
+        scale_X -= scaleFactor;
+        scale_Y -= scaleFactor;
+    }
+    else if( glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS ) // rotate clockwise
+        rotateAngle += rotate_angle * 3.14/180;
+    else if( glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS ) // rotate counter-clockwise
+        rotateAngle -= rotate_angle * 3.14/180;
+
+    // for cone
+    else if( glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS ) // translate-x negative
+        translate_X_Cone -= unit;
+    else if( glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS ) // translate-x positive
+        translate_X_Cone += unit;
+    else if( glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS ) // translate-y negative
+        translate_Y_Cone -= unit;
+    else if( glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS ) // translate-y positive
+        translate_Y_Cone += unit;
+    else if( glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS ){ // scale up
+        scale_X_Cone += scaleFactor;
+        scale_Y_Cone += scaleFactor;
+    }
+    else if( glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS ){ // scale down
+        scale_X_Cone -= scaleFactor;
+        scale_Y_Cone -= scaleFactor;
+    }
+    else if( glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS ) // rotate clockwise
+        rotateAngle_Cone += rotate_angle * 3.14/180;
+    else if( glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS ) // rotate counter-clockwise
+        rotateAngle_Cone -= rotate_angle * 3.14/180;
+
+    // for cream
+    else if( glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS ) // translate-x negative
+        translate_X_Cream -= unit;
+    else if( glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS ) // translate-x positive
+        translate_X_Cream += unit;
+    else if( glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS ) // translate-y negative
+        translate_Y_Cream -= unit;
+    else if( glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS ) // translate-y positive
+        translate_Y_Cream += unit;
+    else if( glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS ){ // scale up
+        scale_X_Cream += scaleFactor;
+        scale_Y_Cream += scaleFactor;
+    }
+    else if( glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS ){ // scale down
+        scale_X_Cream -= scaleFactor;
+        scale_Y_Cream -= scaleFactor;
+    }
+    else if( glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS ) // rotate clockwise
+        rotateAngle_Cream += rotate_angle * 3.14/180;
+    else if( glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS ) // rotate counter-clockwise
+        rotateAngle_Cream -= rotate_angle * 3.14/180;
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
