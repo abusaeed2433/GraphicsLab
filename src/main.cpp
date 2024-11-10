@@ -5,6 +5,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include <unordered_map>
 
 // #include "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\opengl-cpp-template\\include\\glad\\glad.h"
 // #include "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\opengl-cpp-template\\include\\GLFW\\glfw3.h"
@@ -242,8 +243,10 @@ int main()
     initBinding(VAO, VBO);
 
     set<int> fillSet = {0,1,2,3,4};
+    set<int> creamSet = {1,2,3,33};
     float colors[][3] = {
         {0.12, 0.12, 0.12}, // background
+        // {.2, .3, .3},
         {40/255.0, 0/255.0, 189/255.0}, // blue
         {183/255.0, 199/255.0, 6/255.0}, // top yellow
         {26/255.0, 161/255.0, 5/255.0}, // green
@@ -270,7 +273,8 @@ int main()
         translationMatrix = glm::translate(identityMatrix, glm::vec3(translate_X, translate_Y , 0.0f));
         rotationMatrix = glm::rotate(identityMatrix, glm::radians(rotateAngle), glm::vec3(0.0f, 0.0f, 1.0f));
         scaleMatrix = glm::scale(identityMatrix, glm::vec3(scale_X, scale_Y, 1.0f));
-        modelMatrix = translationMatrix * rotationMatrix * scaleMatrix;
+        // modelMatrix = translationMatrix * rotationMatrix * scaleMatrix;
+        modelMatrix = scaleMatrix * rotationMatrix * translationMatrix;
         //modelMatrix = rotationMatrix * scaleMatrix;
 
         glm::mat4 translationMatrixCream;
@@ -304,11 +308,13 @@ int main()
         // Draw each sublist separately
         for (int i = 0; i < numLists; ++i) {
 
-            if(i < 1){
-                glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(modelMatrixCone));
+            // if( i != 0) continue;
+
+            if(creamSet.find(i) != creamSet.end()){
+                glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(modelMatrixCream));
             }
             else{
-                glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(modelMatrixCream));
+                glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(modelMatrixCone));
             }
             
             int index = (i >= 4) ? 5 : i;
@@ -330,6 +336,7 @@ int main()
             else{
                 glDrawArrays(GL_LINE_STRIP, 0, vertexCounts[i] / 3);
             }
+            // glDrawArrays(GL_LINE_STRIP, 0, vertexCounts[i] / 3);
         }
 
         // Unbind for safety
@@ -349,79 +356,94 @@ int main()
     return 0;
 }
 
+std::unordered_map<int, bool> keyState;
+bool isKeyPressedOnce(GLFWwindow* window, int key) {
+    if (glfwGetKey(window, key) == GLFW_PRESS) {
+        if (!keyState[key]) {
+            keyState[key] = true;
+            return true;
+        }
+    } else {
+        keyState[key] = false;
+    }
+    return false;
+}
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow* window)
 {
-    float unit = 0.001;
-    float scaleFactor = 0.01f;
-    float rotate_angle = 20;
-
+    float unit = 0.05;
+    float scaleFactor = 0.2f;
+    float rotate_angle = 30;
+    
     if ( glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    else if( glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS ) // translate-x negative
+
+    else if( isKeyPressedOnce(window, GLFW_KEY_W) == GLFW_PRESS ) // translate-x negative
         translate_X -= unit;
-    else if( glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS ) // translate-x positive
+    else if( isKeyPressedOnce(window, GLFW_KEY_Q) == GLFW_PRESS ) // translate-x positive
         translate_X += unit;
-    else if( glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS ) // translate-y negative
+    else if( isKeyPressedOnce(window, GLFW_KEY_E) == GLFW_PRESS ) // translate-y negative
         translate_Y -= unit;
-    else if( glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS ) // translate-y positive
+    else if( isKeyPressedOnce(window, GLFW_KEY_R) == GLFW_PRESS ) // translate-y positive
         translate_Y += unit;
-    else if( glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS ){ // scale up
+    else if( isKeyPressedOnce(window, GLFW_KEY_T) == GLFW_PRESS ){ // scale up
         scale_X += scaleFactor;
         scale_Y += scaleFactor;
+        std::cout << "Scale Up: scale_X = " << scale_X << ", scale_Y = " << scale_Y << std::flush;
     }
-    else if( glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS ){ // scale down
+    else if( isKeyPressedOnce(window, GLFW_KEY_Y) == GLFW_PRESS ){ // scale down
         scale_X -= scaleFactor;
         scale_Y -= scaleFactor;
+        std::cout << "Scale Down: scale_X = " << scale_X << ", scale_Y = " << scale_Y << std::flush;
     }
-    else if( glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS ) // rotate clockwise
+    else if( isKeyPressedOnce(window, GLFW_KEY_U) == GLFW_PRESS ) // rotate clockwise
         rotateAngle += rotate_angle * 3.14/180;
-    else if( glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS ) // rotate counter-clockwise
+    else if( isKeyPressedOnce(window, GLFW_KEY_I) == GLFW_PRESS ) // rotate counter-clockwise
         rotateAngle -= rotate_angle * 3.14/180;
 
     // for cone
-    else if( glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS ) // translate-x negative
+    else if( isKeyPressedOnce(window, GLFW_KEY_A) == GLFW_PRESS ) // translate-x negative
         translate_X_Cone -= unit;
-    else if( glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS ) // translate-x positive
+    else if( isKeyPressedOnce(window, GLFW_KEY_S) == GLFW_PRESS ) // translate-x positive
         translate_X_Cone += unit;
-    else if( glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS ) // translate-y negative
+    else if( isKeyPressedOnce(window, GLFW_KEY_D) == GLFW_PRESS ) // translate-y negative
         translate_Y_Cone -= unit;
-    else if( glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS ) // translate-y positive
+    else if( isKeyPressedOnce(window, GLFW_KEY_F) == GLFW_PRESS ) // translate-y positive
         translate_Y_Cone += unit;
-    else if( glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS ){ // scale up
+    else if( isKeyPressedOnce(window, GLFW_KEY_G) == GLFW_PRESS ){ // scale up
         scale_X_Cone += scaleFactor;
         scale_Y_Cone += scaleFactor;
     }
-    else if( glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS ){ // scale down
+    else if( isKeyPressedOnce(window, GLFW_KEY_H) == GLFW_PRESS ){ // scale down
         scale_X_Cone -= scaleFactor;
         scale_Y_Cone -= scaleFactor;
     }
-    else if( glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS ) // rotate clockwise
+    else if( isKeyPressedOnce(window, GLFW_KEY_J) == GLFW_PRESS ) // rotate clockwise
         rotateAngle_Cone += rotate_angle * 3.14/180;
-    else if( glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS ) // rotate counter-clockwise
+    else if( isKeyPressedOnce(window, GLFW_KEY_K) == GLFW_PRESS ) // rotate counter-clockwise
         rotateAngle_Cone -= rotate_angle * 3.14/180;
 
     // for cream
-    else if( glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS ) // translate-x negative
+    else if( isKeyPressedOnce(window, GLFW_KEY_Z) == GLFW_PRESS ) // translate-x negative
         translate_X_Cream -= unit;
-    else if( glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS ) // translate-x positive
+    else if( isKeyPressedOnce(window, GLFW_KEY_X) == GLFW_PRESS ) // translate-x positive
         translate_X_Cream += unit;
-    else if( glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS ) // translate-y negative
+    else if( isKeyPressedOnce(window, GLFW_KEY_C) == GLFW_PRESS ) // translate-y negative
         translate_Y_Cream -= unit;
-    else if( glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS ) // translate-y positive
+    else if( isKeyPressedOnce(window, GLFW_KEY_V) == GLFW_PRESS ) // translate-y positive
         translate_Y_Cream += unit;
-    else if( glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS ){ // scale up
+    else if( isKeyPressedOnce(window, GLFW_KEY_B) == GLFW_PRESS ){ // scale up
         scale_X_Cream += scaleFactor;
         scale_Y_Cream += scaleFactor;
     }
-    else if( glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS ){ // scale down
+    else if( isKeyPressedOnce(window, GLFW_KEY_N) == GLFW_PRESS ){ // scale down
         scale_X_Cream -= scaleFactor;
         scale_Y_Cream -= scaleFactor;
     }
-    else if( glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS ) // rotate clockwise
+    else if( isKeyPressedOnce(window, GLFW_KEY_M) == GLFW_PRESS ) // rotate clockwise
         rotateAngle_Cream += rotate_angle * 3.14/180;
-    else if( glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS ) // rotate counter-clockwise
+    else if( isKeyPressedOnce(window, GLFW_KEY_COMMA) == GLFW_PRESS ) // rotate counter-clockwise
         rotateAngle_Cream -= rotate_angle * 3.14/180;
 }
 
