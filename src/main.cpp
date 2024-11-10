@@ -7,8 +7,6 @@
 #include "glm/gtc/type_ptr.hpp"
 #include <unordered_map>
 
-// #include "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\opengl-cpp-template\\include\\glad\\glad.h"
-// #include "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\opengl-cpp-template\\include\\GLFW\\glfw3.h"
 #include <set>
 #include <iostream>
 #include <fstream>
@@ -47,11 +45,7 @@ const char* fragmentShaderSource = "#version 330 core\n"
 "   FragColor = vec4(color, 1.0f);\n"  // Use the color uniform here
 "}\n\0";
 
-
-
 using namespace std;
-
-
 
 float** readPoints(const std::string& filename, int& numLists, int*& vertexCounts) {
     std::ifstream file(filename);
@@ -73,7 +67,7 @@ float** readPoints(const std::string& filename, int& numLists, int*& vertexCount
             // End of a nested list, add current points to nestedPoints
             if (!points.empty()) {
 
-                if(lineCount == 3){ // calculate the centroid
+                if(lineCount == 4 || lineCount == 1){ // calculate the centroid
                     float x = 0, y = 0;
                     for(int i = 0; i < points.size(); i+=3){
                         x += points[i];
@@ -242,9 +236,10 @@ int main()
     unsigned int VBO, VAO;
     initBinding(VAO, VBO);
 
-    set<int> fillSet = {0,1,2,3,4};
-    set<int> creamSet = {1,2,3,33};
+    set<int> fillSet = {0,1,2,3,4,5};
+    set<int> creamSet = {0,2,3,4,34};
     float colors[][3] = {
+        {0.12, 0.12, 0.12}, // background
         {0.12, 0.12, 0.12}, // background
         // {.2, .3, .3},
         {40/255.0, 0/255.0, 189/255.0}, // blue
@@ -336,7 +331,7 @@ int main()
             else{
                 glDrawArrays(GL_LINE_STRIP, 0, vertexCounts[i] / 3);
             }
-            // glDrawArrays(GL_LINE_STRIP, 0, vertexCounts[i] / 3);
+            //glDrawArrays(GL_LINE_STRIP, 0, vertexCounts[i] / 3);
         }
 
         // Unbind for safety
@@ -368,8 +363,7 @@ bool isKeyPressedOnce(GLFWwindow* window, int key) {
     }
     return false;
 }
-// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-// ---------------------------------------------------------------------------------------------------------
+
 void processInput(GLFWwindow* window)
 {
     float unit = 0.05;
