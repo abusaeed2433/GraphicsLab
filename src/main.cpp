@@ -160,78 +160,70 @@ GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path
 	return ProgramID;
 }
 
-float** readPoints(const std::string& filename, int& numLists, int*& vertexCounts) {
-    std::ifstream file(filename);
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <memory> // For std::unique_ptr
+#include "common/Shape.h"
+#include "common/Triangle.h"
+#include "common/Point.h"
+
+std::vector<std::unique_ptr<Shape>> readShapes() {
+    std::ifstream file(
+        "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\project\\src\\points.txt"
+    );
 
     if (!file.is_open()) {
-        std::cout << "Failed to open file" << std::endl;
-        return nullptr;
+        std::cerr << "Failed to open file" << std::endl;
+        return {};
     }
 
-    std::vector<std::vector<float>> nestedPoints; // Store each list of points as a vector
-    std::vector<float> points;                    // Current list of points
+    std::vector<std::unique_ptr<Shape>> shapes;
     std::string line;
 
-    int lineCount = 0;
-
     while (std::getline(file, line)) {
-        if (line == "=") {
-            lineCount++;
-            // End of a nested list, add current points to nestedPoints
-            if (!points.empty()) {
+        if (line.empty()) continue;
 
-                if(lineCount == 4 || lineCount == 1){ // calculate the centroid
-                    float x = 0, y = 0;
-                    for(int i = 0; i < points.size(); i+=3){
-                        x += points[i];
-                        y += points[i+1];
-                    }
-                    x /= points.size()/3;
-                    y /= points.size()/3;
-                    points[0] = x, points[1] = y, points[2] = 0.0f;
-                    // points.push_back(x);
-                    // points.push_back(y);
-                    // points.push_back(0.0f);
-                }
+        if (line.substr(0, 6) == "#start"){// Start of a shape definition block
+            printf("Reading shape\n");
+            std::getline(file, line); // Read shape metadata line
 
-                nestedPoints.push_back(points);
-                points.clear(); // Reset for the next list
-            }
-        } else {
             std::istringstream iss(line);
-            float x, y;
-            char ch;
-            if (iss >> x >> ch >> y && ch == ',') {
-                points.push_back(x*0.6f);
-                points.push_back(y);
-                points.push_back(0.0f); // z-coordinate
+            int catId, id;
+            std::string name;
+
+            iss >> catId >> name >> id;
+
+            if (catId == 0) { // Ignore block if id is 0
+                while (line != "#end") std::getline(file, line);
+                printf("Ignoring shape\n");
+                continue;
+            }
+
+            std::vector<Point> points;
+            while (std::getline(file, line)) {
+                if (line == "#end") break;
+
+                float x, y, z;
+                char ch;
+
+                std::istringstream pointStream(line);
+                pointStream >> x >> ch >> y >> ch >> z;
+                points.emplace_back(x, y, z);
+            }
+
+            if (catId == 3) { // Triangle
+                if (points.size() >= 3) { // Ensure there are enough points for a triangle
+                    shapes.push_back(std::make_unique<Triangle>(points[0], points[1], points[2]));
+                }
             }
         }
     }
 
-    // Add the last set of points, if any, after the last "=" line
-    if (!points.empty()) {
-        nestedPoints.push_back(points);
-    }
-
-    // Convert nestedPoints to a 2D float array
-    numLists = nestedPoints.size();
-    vertexCounts = new int[numLists]; // Track vertex count for each list
-    float** vertexArrays = new float*[numLists];
-
-    for (int i = 0; i < numLists; ++i) {
-        int size = nestedPoints[i].size();
-        vertexCounts[i] = size; // Total number of floats in each list
-        vertexArrays[i] = new float[size];
-
-        // Copy points to 2D array
-        for (int j = 0; j < size; ++j) {
-            vertexArrays[i][j] = nestedPoints[i][j];
-        }
-    }
-
-    return vertexArrays;
+    return shapes;
 }
+
 
 int main()
 {
@@ -251,10 +243,18 @@ int main()
     unsigned int transformLoc = glGetUniformLocation(programID, "transform");
     unsigned int colorLocation = glGetUniformLocation(programID, "color");
 
-    Point point1(0.0f, 0.5f); // Top vertex
-    Point point2(-0.5f, -0.5f); // Bottom-left vertex
-    Point point3(0.5f, -0.5f); // Bottom-right vertex
-    Triangle triangle(point1, point2, point3);
+    // Point point1(0.0f, 0.5f); // Top vertex
+    // Point point2(-0.5f, -0.5f); // Bottom-left vertex
+    // Point point3(0.5f, -0.5f); // Bottom-right vertex
+    // Triangle triangle(point1, point2, point3);
+
+    std::vector<std::unique_ptr<Shape>> shapes = readShapes();
+
+    printf("Shape size is: %d\n", shapes.size());
+    for(int i=0; i<shapes.size(); i++){
+        printf("Drawing shape %d\n", i);
+    }
+    flush(cout);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -277,10 +277,10 @@ int main()
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0 );
 
-        // draw 
-        triangle.draw(transformLoc, colorLocation, modelMatrix);
-
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        // draw
+        for(int i=0; i<shapes.size(); i++){
+            shapes[i]->draw(transformLoc, colorLocation, modelMatrix);
+        }
         
         glDisableVertexAttribArray(0);
         // swap buffer

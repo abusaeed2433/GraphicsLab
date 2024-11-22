@@ -1,7 +1,7 @@
 
 #start
-0 ignore 'top header block'
-<id> <name> <optional_description>
+0 ignore 1
+<id> <name> <id>
 for ignore block, it will ignore everything inside
 
 0 -> ignore
@@ -13,8 +13,8 @@ for ignore block, it will ignore everything inside
 #end
 
 #start
-1 Point `first point block`
+3 Point 2
 0.0, 0.5, 0
 -0.5, -0.5, 0
-0.5, -0.5,0
+0.5, -0.5, 0
 #end
