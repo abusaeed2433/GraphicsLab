@@ -17,7 +17,7 @@ private:
     void setupBuffer(); // Private method to initialize OpenGL buffers
 
 public:
-    Triangle(Point p1, Point p2, Point p3);
+    Triangle(Point color, Point p1, Point p2, Point p3);
     void draw(GLuint transformLoc, GLuint colorLoc, glm::mat4 modelMatrix) override;
     ~Triangle();
 };

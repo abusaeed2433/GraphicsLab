@@ -201,13 +201,18 @@ std::vector<std::unique_ptr<Shape>> readShapes() {
                 continue;
             }
 
+            // color
+            float x, y, z;
+            char ch;
+            std::getline(file, line);
+            std::istringstream pointStream(line);
+            pointStream >> x >> ch >> y >> ch >> z;
+            Point color(x, y, z);
+
             std::vector<Point> points;
             while (std::getline(file, line)) {
-                if (line == "#end") break;
-
-                float x, y, z;
-                char ch;
-
+                if (line == "#end") break;                
+                
                 std::istringstream pointStream(line);
                 pointStream >> x >> ch >> y >> ch >> z;
                 points.emplace_back(x, y, z);
@@ -215,7 +220,7 @@ std::vector<std::unique_ptr<Shape>> readShapes() {
 
             if (catId == 3) { // Triangle
                 if (points.size() >= 3) { // Ensure there are enough points for a triangle
-                    shapes.push_back(std::make_unique<Triangle>(points[0], points[1], points[2]));
+                    shapes.push_back(std::make_unique<Triangle>(color,points[0], points[1], points[2]));
                 }
             }
         }

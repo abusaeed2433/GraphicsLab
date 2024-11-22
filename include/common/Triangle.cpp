@@ -1,6 +1,9 @@
 #include "Triangle.h"
 
-Triangle::Triangle(Point p1, Point p2, Point p3) : p1(p1), p2(p2), p3(p3) {
+Triangle::Triangle(Point color, Point p1, Point p2, Point p3) : Shape(color) {
+    this->p1 = p1;
+    this->p2 = p2;
+    this->p3 = p3;
     setupBuffer();
 }
 
@@ -33,7 +36,7 @@ void Triangle::draw(GLuint transformLoc, GLuint colorLoc, glm::mat4 modelMatrix)
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 
     // Set triangle color
-    glUniform3f(colorLoc, 1.0f, 0.0f, 0.0f);
+    glUniform3f(colorLoc, color.x, color.y, color.z);
 
     // Bind VAO and draw the triangle
     glBindVertexArray(VAO);
