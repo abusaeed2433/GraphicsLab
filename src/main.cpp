@@ -7,6 +7,8 @@
 #include "glm/gtc/type_ptr.hpp"
 
 #include "common/MyClasses.cpp"
+#include "common/Shader.h"
+#include "common/BasicCamera.h"
 
 #include <unordered_map>
 #include <memory>
@@ -18,26 +20,51 @@
 #include <sstream>
 #include <string>
 
+using namespace std;
+
 #define PI 3.14159265359
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
-void generateHexagonVertices(float* vertices, float radius, float height);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+
+void drawCube(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans, float posX = 0.0, float posY = 0.0, float posz = 0.0, float rotX = 0.0, float rotY = 0.0, float rotZ = 0.0,float scX = 1.0, float scY = 1.0, float scZ=1.0);
+
 
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+
+// modelling transform
+float rotateAngle_X = 45.0;
+float rotateAngle_Y = 45.0;
+float rotateAngle_Z = 45.0;
+float rotateAxis_X = 0.0;
+float rotateAxis_Y = 0.0;
+float rotateAxis_Z = 1.0;
 float translate_X = 0.0;
 float translate_Y = 0.0;
-float rotateAngle = 0.0;
+float translate_Z = 0.0;
 float scale_X = 1.0;
 float scale_Y = 1.0;
+float scale_Z = 1.0;
 
+// camera
+float lastX = SCR_WIDTH / 2.0f;
+float lastY = SCR_HEIGHT / 2.0f;
+bool firstMouse = true;
 
-float translate_X_Cream = 0.0f, translate_Y_Cream = 0.0f, rotateAngle_Cream = 0.0f, scale_X_Cream = 1.0f, scale_Y_Cream = 1.0f;
-float translate_X_Cone = 0.0f, translate_Y_Cone = 0.0f, rotateAngle_Cone = 0.0f, scale_X_Cone = 1.0f, scale_Y_Cone = 1.0f;
+float eyeX = 0.0, eyeY = 0.0, eyeZ = 3.0;
+float lookAtX = 0.0, lookAtY = 0.0, lookAtZ = 0.0;
+glm::vec3 V = glm::vec3(0.0f, 1.0f, 0.0f);
+BasicCamera basicCamera(eyeX, eyeY, eyeZ, lookAtX, lookAtY, lookAtZ, V);
 
-using namespace std;
+// timing
+float deltaTime = 0.0f;    // time between current frame and last frame
+float lastFrame = 0.0f;
+
 
 int initGlfw(GLFWwindow*& window){
     glfwInit();
@@ -51,6 +78,10 @@ int initGlfw(GLFWwindow*& window){
 
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // glad: load all OpenGL function pointers
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) { cout << "Failed to initialize GLAD" << endl; return -1; }
@@ -59,110 +90,37 @@ int initGlfw(GLFWwindow*& window){
     return 0;
 }
 
-void safeTerminate(unsigned int& VAO, unsigned int& VBO){
+void safeTerminate(unsigned int& VAO, unsigned int& VBO, unsigned int& EBO){
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
     glfwTerminate();
 }
 
-void initBinding(unsigned int &VAO, unsigned int &VBO){
+void initBinding(unsigned int &VAO, unsigned int &VBO, unsigned int &EBO, Shader &ourShader, float* cube_vertices, int verticesSize, unsigned int* cube_indices, int indicesSize){
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+    
     glBindVertexArray(VAO);
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    
+//
+    glBufferData(GL_ARRAY_BUFFER, verticesSize, cube_vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesSize, cube_indices, GL_STATIC_DRAW);
+
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    //color attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)12);
+    glEnableVertexAttribArray(1);
+    ourShader.use();
 }
-
-GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path){
-
-	// Create the shaders
-	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-	GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-
-	// Read the Vertex Shader code from the file
-	std::string VertexShaderCode;
-	std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
-	if(VertexShaderStream.is_open()){
-		std::stringstream sstr;
-		sstr << VertexShaderStream.rdbuf();
-		VertexShaderCode = sstr.str();
-		VertexShaderStream.close();
-	}else{
-		printf("Impossible to open %s. Are you in the right directory ? Don't forget to read the FAQ !\n", vertex_file_path);
-		getchar();
-		return 0;
-	}
-
-	// Read the Fragment Shader code from the file
-	std::string FragmentShaderCode;
-	std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
-	if(FragmentShaderStream.is_open()){
-		std::stringstream sstr;
-		sstr << FragmentShaderStream.rdbuf();
-		FragmentShaderCode = sstr.str();
-		FragmentShaderStream.close();
-	}
-
-	GLint Result = GL_FALSE;
-	int InfoLogLength;
-
-	// Compile Vertex Shader
-	printf("Compiling shader : %s\n", vertex_file_path);
-    flush(cout);
-	char const * VertexSourcePointer = VertexShaderCode.c_str();
-	glShaderSource(VertexShaderID, 1, &VertexSourcePointer , NULL);
-	glCompileShader(VertexShaderID);
-
-	// Check Vertex Shader
-	glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
-	glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if ( InfoLogLength > 0 ){
-		std::vector<char> VertexShaderErrorMessage(InfoLogLength+1);
-		glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
-		printf("%s\n", &VertexShaderErrorMessage[0]);
-	}
-
-	// Compile Fragment Shader
-	printf("Compiling shader : %s\n", fragment_file_path);
-    flush(cout);
-	char const * FragmentSourcePointer = FragmentShaderCode.c_str();
-	glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer , NULL);
-	glCompileShader(FragmentShaderID);
-
-	// Check Fragment Shader
-	glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
-	glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if ( InfoLogLength > 0 ){
-		std::vector<char> FragmentShaderErrorMessage(InfoLogLength+1);
-		glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
-		printf("%s\n", &FragmentShaderErrorMessage[0]);
-	}
-
-	// Link the program
-	printf("Linking program\n");
-	GLuint ProgramID = glCreateProgram();
-	glAttachShader(ProgramID, VertexShaderID);
-	glAttachShader(ProgramID, FragmentShaderID);
-	glLinkProgram(ProgramID);
-
-	// Check the program
-	glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
-	glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if ( InfoLogLength > 0 ){
-		std::vector<char> ProgramErrorMessage(InfoLogLength+1);
-		glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
-		printf("%s\n", &ProgramErrorMessage[0]);
-	}
-	
-	glDetachShader(ProgramID, VertexShaderID);
-	glDetachShader(ProgramID, FragmentShaderID);
-	
-	glDeleteShader(VertexShaderID);
-	glDeleteShader(FragmentShaderID);
-
-	return ProgramID;
-}
-
-
 
 std::vector<std::unique_ptr<Shape>> readShapes() {
     std::ifstream file(
@@ -237,181 +195,237 @@ int main()
     GLFWwindow* window = nullptr;
     if( initGlfw(window) ) return -1;
 
-    unsigned int VBO, VAO;
-    initBinding(VAO, VBO);
+    glEnable(GL_DEPTH_TEST);
     
-    GLuint programID = LoadShaders(
-        "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\project\\src\\vertex_shader.vs",
-        "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\project\\src\\fragment_shader.fs"
+    Shader ourShader(
+        "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\project\\src\\VertexShader.vs", 
+        "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\project\\src\\FragmentShader.fs"
     );
-    
-    glUseProgram(programID);
-    
-    unsigned int transformLoc = glGetUniformLocation(programID, "transform");
-    unsigned int colorLocation = glGetUniformLocation(programID, "color");
 
-    // Point point1(0.0f, 0.5f); // Top vertex
-    // Point point2(-0.5f, -0.5f); // Bottom-left vertex
-    // Point point3(0.5f, -0.5f); // Bottom-right vertex
-    // Triangle triangle(point1, point2, point3);
+    Shader constantShader(
+        "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\project\\src\\VertexShader.vs", 
+        "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\project\\src\\FragmentShaderV2.fs"
+    );
 
-    std::vector<std::unique_ptr<Shape>> shapes = readShapes();
+    // set up vertex data (and buffer(s)) and configure vertex attributes
+    // ------------------------------------------------------------------
+    float cube_vertices[] = {
+        0.0f, 0.0f, 0.0f, 0.3f, 0.8f, 0.5f,
+        0.5f, 0.0f, 0.0f, 0.5f, 0.4f, 0.3f,
+        0.5f, 0.5f, 0.0f, 0.2f, 0.7f, 0.3f,
+        0.0f, 0.5f, 0.0f, 0.6f, 0.2f, 0.8f,
+        0.0f, 0.0f, 0.5f, 0.8f, 0.3f, 0.6f,
+        0.5f, 0.0f, 0.5f, 0.4f, 0.4f, 0.8f,
+        0.5f, 0.5f, 0.5f, 0.2f, 0.3f, 0.6f,
+        0.0f, 0.5f, 0.5f, 0.7f, 0.5f, 0.4f
+    };
+    unsigned int cube_indices[] = {
+       0, 3, 2,
+       2, 1, 0,
 
-    printf("Shape size is: %d\n", shapes.size());
-    for(int i=0; i<shapes.size(); i++){
-        printf("Drawing shape %d\n", i);
-    }
-    flush(cout);
+       1, 2, 6,
+       6, 5, 1,
+
+       5, 6, 7,
+       7 ,4, 5,
+
+       4, 7, 3,
+       3, 0, 4,
+
+       6, 2, 3,
+       3, 7, 6,
+
+       1, 5, 4,
+       4, 0, 1
+   };
+
+    unsigned int VBO, VAO, EBO;
+    initBinding(VAO, VBO, EBO, ourShader, cube_vertices, sizeof(cube_vertices), cube_indices, sizeof(cube_indices));
 
     while (!glfwWindowShouldClose(window))
     {
-        processInput(window);    
+        processInput(window);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+        glm::mat4 projection = glm::perspective(glm::radians(basicCamera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        //glm::mat4 projection = glm::ortho(-2.0f, +2.0f, -1.5f, +1.5f, 0.1f, 100.0f);
+        ourShader.setMat4("projection", projection);
+        constantShader.setMat4("projection", projection);
+
+        // camera/view transformation
+        glm::mat4 view = basicCamera.createViewMatrix();
+        ourShader.setMat4("view", view);
+        constantShader.setMat4("view", view);
+
+
+
+        // Modelling Transformation
+        glm::mat4 identityMatrix = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         
-        // apply color and transformation
-        glm::mat4 translationMatrix, rotationMatrix, scaleMatrix, modelMatrix;
-        glm::mat4 identityMatrix = glm::mat4(1.0f);
-        translationMatrix = glm::translate(identityMatrix, glm::vec3(translate_X, translate_Y , 0.0f));
-        rotationMatrix = glm::rotate(identityMatrix, glm::radians(rotateAngle), glm::vec3(0.0f, 0.0f, 1.0f));
-        scaleMatrix = glm::scale(identityMatrix, glm::vec3(scale_X, scale_Y, 1.0f));
-        modelMatrix = translationMatrix * rotationMatrix * scaleMatrix; // scale first, then rotate, then translate
-        glUniform3f(colorLocation, 1,0,0);
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+        // drawing
+        // drawCube(ourShader, VAO, identityMatrix, translate_X, translate_Y, translate_Z, rotateAngle_X, rotateAngle_Y, rotateAngle_Z, scale_X, scale_Y, scale_Z);
 
-        // draw here
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0 );
+        // drawing
+        // Floor
+        drawCube(ourShader, VAO, identityMatrix, 0.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 20.0f, 0.1f, 20.0f); // Room floor
 
-        // draw
-        for(int i=0; i<shapes.size(); i++){
-            shapes[i]->draw(transformLoc, colorLocation, modelMatrix);
+        // Walls
+        drawCube(ourShader, VAO, identityMatrix, 0.0f, 5.0f, -10.0f, 0.0f, 0.0f, 0.0f, 20.0f, 10.0f, 0.1f); // Back wall
+        drawCube(ourShader, VAO, identityMatrix, -10.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.1f, 10.0f, 20.0f); // Left wall
+        drawCube(ourShader, VAO, identityMatrix, 10.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.1f, 10.0f, 20.0f);  // Right wall
+        drawCube(ourShader, VAO, identityMatrix, 0.0f, 10.0f, 0.0f, 0.0f, 0.0f, 0.0f, 20.0f, 0.1f, 20.0f);  // Ceiling
+
+        // Tables (4 rows, 2 columns)
+        float tableWidth = 2.0f, tableHeight = 1.0f, tableDepth = 1.5f;
+        for (int row = 0; row < 4; ++row) {
+            for (int col = 0; col < 2; ++col) {
+                float x = (col * 5.0f) - 2.5f; // Offset for columns
+                float z = (row * -3.0f) + 2.0f; // Offset for rows
+                drawCube(ourShader, VAO, identityMatrix, x, 0.5f, z, 0.0f, 0.0f, 0.0f, tableWidth, tableHeight, tableDepth); // Table top
+            }
         }
+
+        // Chairs (placed with offset near tables)
+        float chairWidth = 1.0f, chairHeight = 1.0f, chairDepth = 1.0f;
+        for (int row = 0; row < 4; ++row) {
+            for (int col = 0; col < 2; ++col) {
+                float x = (col * 5.0f) - 3.0f; // Offset for columns
+                float z = (row * -3.0f) + 3.0f; // Offset for rows
+                drawCube(ourShader, VAO, identityMatrix, x, 0.5f, z, 0.0f, 0.0f, 0.0f, chairWidth, chairHeight, chairDepth); // Chair seat
+                drawCube(ourShader, VAO, identityMatrix, x, 1.5f, z - 0.5f, 0.0f, 0.0f, 0.0f, chairWidth, chairHeight, 0.2f); // Chair back
+            }
+        }
+
+        // Teacher's Table
+        drawCube(ourShader, VAO, identityMatrix, 0.0f, 0.5f, 8.0f, 0.0f, 0.0f, 0.0f, 3.0f, 1.0f, 2.0f); // Teacher's table
+
+        // Chair for Teacher
+        drawCube(ourShader, VAO, identityMatrix, 0.0f, 0.5f, 6.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);   // Seat
+        drawCube(ourShader, VAO, identityMatrix, 0.0f, 1.5f, 6.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.2f);   // Back
+
+        // Blackboard
+        drawCube(ourShader, VAO, identityMatrix, 0.0f, 5.0f, 9.5f, 0.0f, 0.0f, 0.0f, 8.0f, 4.0f, 0.1f); // Blackboard
+
+        // drawing above
         
-        glDisableVertexAttribArray(0);
-        // swap buffer
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    safeTerminate(VAO, VBO);
+    safeTerminate(VAO, VBO, EBO);
     return 0;
 }
 
-void generateHexagonVertices(float* vertices, float radius, float height) {
-    int vertexIndex = 0;
 
-    // Generate top and bottom face vertices
-    for (int i = 0; i < 6; i++) {
-        float angle = 2.0f * PI * i / 6.0f;
-        float nextAngle = 2.0f * PI * (i + 1) / 6.0f;
-
-        // Center top (0, height, 0)
-        vertices[vertexIndex++] = 0.0f;
-        vertices[vertexIndex++] = height;
-        vertices[vertexIndex++] = 0.0f;
-
-        // Current vertex top
-        vertices[vertexIndex++] = radius * cos(angle);
-        vertices[vertexIndex++] = height;
-        vertices[vertexIndex++] = radius * sin(angle);
-
-        // Next vertex top
-        vertices[vertexIndex++] = radius * cos(nextAngle);
-        vertices[vertexIndex++] = height;
-        vertices[vertexIndex++] = radius * sin(nextAngle);
-
-        // Center bottom (0, -height, 0)
-        vertices[vertexIndex++] = 0.0f;
-        vertices[vertexIndex++] = -height;
-        vertices[vertexIndex++] = 0.0f;
-
-        // Current vertex bottom
-        vertices[vertexIndex++] = radius * cos(angle);
-        vertices[vertexIndex++] = -height;
-        vertices[vertexIndex++] = radius * sin(angle);
-
-        // Next vertex bottom
-        vertices[vertexIndex++] = radius * cos(nextAngle);
-        vertices[vertexIndex++] = -height;
-        vertices[vertexIndex++] = radius * sin(nextAngle);
-
-        // Side faces
-        // Triangle 1
-        vertices[vertexIndex++] = radius * cos(angle);
-        vertices[vertexIndex++] = height;
-        vertices[vertexIndex++] = radius * sin(angle);
-
-        vertices[vertexIndex++] = radius * cos(angle);
-        vertices[vertexIndex++] = -height;
-        vertices[vertexIndex++] = radius * sin(angle);
-
-        vertices[vertexIndex++] = radius * cos(nextAngle);
-        vertices[vertexIndex++] = -height;
-        vertices[vertexIndex++] = radius * sin(nextAngle);
-
-        // Triangle 2
-        vertices[vertexIndex++] = radius * cos(angle);
-        vertices[vertexIndex++] = height;
-        vertices[vertexIndex++] = radius * sin(angle);
-
-        vertices[vertexIndex++] = radius * cos(nextAngle);
-        vertices[vertexIndex++] = -height;
-        vertices[vertexIndex++] = radius * sin(nextAngle);
-
-        vertices[vertexIndex++] = radius * cos(nextAngle);
-        vertices[vertexIndex++] = height;
-        vertices[vertexIndex++] = radius * sin(nextAngle);
-    }
-}
-
-
-std::unordered_map<int, bool> keyState;
-bool isKeyPressedOnce(GLFWwindow* window, int key) {
-    if (glfwGetKey(window, key) == GLFW_PRESS) {
-        if (!keyState[key]) {
-            keyState[key] = true;
-            return true;
-        }
-    } else {
-        keyState[key] = false;
-    }
-    return false;
-}
 void processInput(GLFWwindow* window)
 {
-    float unit = 0.05;
-    float scaleFactor = 0.2f;
-    float rotate_angle = 30;
-    
-    if ( glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    else if( isKeyPressedOnce(window, GLFW_KEY_W) == GLFW_PRESS ) // translate-x negative
-        translate_X -= unit;
-    else if( isKeyPressedOnce(window, GLFW_KEY_Q) == GLFW_PRESS ) // translate-x positive
-        translate_X += unit;
-    else if( isKeyPressedOnce(window, GLFW_KEY_E) == GLFW_PRESS ) // translate-y negative
-        translate_Y -= unit;
-    else if( isKeyPressedOnce(window, GLFW_KEY_R) == GLFW_PRESS ) // translate-y positive
-        translate_Y += unit;
-    else if( isKeyPressedOnce(window, GLFW_KEY_T) == GLFW_PRESS ){ // scale up
-        scale_X += scaleFactor;
-        scale_Y += scaleFactor;
-        std::cout << "Scale Up: scale_X = " << scale_X << ", scale_Y = " << scale_Y << std::flush;
-    }
-    else if( isKeyPressedOnce(window, GLFW_KEY_Y) == GLFW_PRESS ){ // scale down
-        scale_X -= scaleFactor;
-        scale_Y -= scaleFactor;
-        std::cout << "Scale Down: scale_X = " << scale_X << ", scale_Y = " << scale_Y << std::flush;
-    }
-    else if( isKeyPressedOnce(window, GLFW_KEY_U) == GLFW_PRESS ) // rotate clockwise
-        rotateAngle += rotate_angle * 3.14/180;
-    else if( isKeyPressedOnce(window, GLFW_KEY_I) == GLFW_PRESS ) // rotate counter-clockwise
-        rotateAngle -= rotate_angle * 3.14/180;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        basicCamera.eye.z -= 0.1f; // Move forward
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        basicCamera.eye.z += 0.1f; // Move backward
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        basicCamera.eye.x -= 0.1f; // Move left
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        basicCamera.eye.x += 0.1f; // Move right
+
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height){
+// glfw: whenever the window size changed (by OS or user resize) this callback function executes
+// ---------------------------------------------------------------------------------------------
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+    // make sure the viewport matches the new window dimensions; note that width and
+    // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
+}
+
+
+// Track whether the mouse button is pressed
+bool isMousePressed = false;
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        if (action == GLFW_PRESS) {
+            isMousePressed = true;
+        } else if (action == GLFW_RELEASE) {
+            isMousePressed = false;
+        }
+    }
+}
+
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    static bool firstMouse = true;
+    static float lastX = SCR_WIDTH / 2.0f, lastY = SCR_HEIGHT / 2.0f;
+
+    if (firstMouse) {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    if (isMousePressed) {
+        float xOffset = xpos - lastX;
+        float yOffset = lastY - ypos;  // Inverted because y-coordinates go from top to bottom in window
+        lastX = xpos;
+        lastY = ypos;
+
+        // Adjust sensitivity for smoother motion
+        xOffset *= basicCamera.MouseSensitivity;
+        yOffset *= basicCamera.MouseSensitivity;
+
+        // Update yaw and pitch
+        basicCamera.Yaw += xOffset;  // Left drag moves camera right
+        basicCamera.Pitch += yOffset;  // Up drag moves camera down
+
+        // Constrain pitch to prevent flipping
+        if (basicCamera.Pitch > 89.0f)
+            basicCamera.Pitch = 89.0f;
+        if (basicCamera.Pitch < -89.0f)
+            basicCamera.Pitch = -89.0f;
+
+        // Calculate new camera direction
+        glm::vec3 front;
+        front.x = cos(glm::radians(basicCamera.Yaw)) * cos(glm::radians(basicCamera.Pitch));
+        front.y = sin(glm::radians(basicCamera.Pitch));
+        front.z = sin(glm::radians(basicCamera.Yaw)) * cos(glm::radians(basicCamera.Pitch));
+        basicCamera.direction = glm::normalize(front);
+
+        // Update the camera's lookAt point
+        basicCamera.lookAt = basicCamera.eye + basicCamera.direction;
+    }
+}
+
+
+
+// glfw: whenever the mouse scroll wheel scrolls, this callback is called
+// ----------------------------------------------------------------------
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    basicCamera.ProcessMouseScroll(static_cast<float>(yoffset));
+}
+
+// The parentTrans parameter is here for hiererchical modeling,
+// If you are confused with it's usage, then pass an identity matrix to it, and everything will be fine 
+void drawCube(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans, float posX, float posY, float posZ, float rotX , float rotY, float rotZ, float scX, float scY, float scZ)
+{
+    shaderProgram.use();
+
+    glm::mat4 translateMatrix, rotateXMatrix, rotateYMatrix, rotateZMatrix, scaleMatrix, model, modelCentered;
+    translateMatrix = glm::translate(parentTrans, glm::vec3(posX, posY, posZ));
+    rotateXMatrix = glm::rotate(translateMatrix, glm::radians(rotX), glm::vec3(1.0f, 0.0f, 0.0f));
+    rotateYMatrix = glm::rotate(rotateXMatrix, glm::radians(rotY), glm::vec3(0.0f, 1.0f, 0.0f));
+    rotateZMatrix = glm::rotate(rotateYMatrix, glm::radians(rotZ), glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::scale(rotateZMatrix, glm::vec3(scX, scY, scZ));
+    modelCentered = glm::translate(model, glm::vec3(-0.25, -0.25, -0.25));
+
+    shaderProgram.setMat4("model", modelCentered);
+
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
