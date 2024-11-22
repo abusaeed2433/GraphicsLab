@@ -5,9 +5,11 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
-#include "common/Point.h"
-#include "common/Triangle.cpp"
+
+#include "common/MyClasses.cpp"
+
 #include <unordered_map>
+#include <memory>
 
 #include <set>
 #include <iostream>
@@ -160,14 +162,7 @@ GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path
 	return ProgramID;
 }
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <memory> // For std::unique_ptr
-#include "common/Shape.h"
-#include "common/Triangle.h"
-#include "common/Point.h"
+
 
 std::vector<std::unique_ptr<Shape>> readShapes() {
     std::ifstream file(
@@ -219,8 +214,15 @@ std::vector<std::unique_ptr<Shape>> readShapes() {
             }
 
             if (catId == 3) { // Triangle
+
                 if (points.size() >= 3) { // Ensure there are enough points for a triangle
+                    printf("Creating triangle\n");
                     shapes.push_back(std::make_unique<Triangle>(color,points[0], points[1], points[2]));
+                }
+            }
+            else if(catId == 4){
+                if (points.size() >= 4) { // Ensure there are enough points for a rectangle
+                    shapes.push_back( std::make_unique<Rectangle>(color, points[0], points[1], points[2], points[3]) );
                 }
             }
         }
