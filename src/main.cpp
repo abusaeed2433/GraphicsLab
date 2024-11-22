@@ -5,7 +5,8 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
-//#include "common/shadder.hpp"
+#include "common/Point.h"
+#include "common/Triangle.cpp"
 #include <unordered_map>
 
 #include <set>
@@ -30,22 +31,6 @@ float rotateAngle = 0.0;
 float scale_X = 1.0;
 float scale_Y = 1.0;
 
-
-const char *vertexShaderSource = "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "uniform mat4 transform;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = transform * vec4(aPos, 1.0);\n"
-    "}\0";
-
-const char* fragmentShaderSource = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"uniform vec3 color;\n"  // Define the color uniform
-"void main()\n"
-"{\n"
-"   FragColor = vec4(color, 1.0f);\n"  // Use the color uniform here
-"}\n\0";
 
 float translate_X_Cream = 0.0f, translate_Y_Cream = 0.0f, rotateAngle_Cream = 0.0f, scale_X_Cream = 1.0f, scale_Y_Cream = 1.0f;
 float translate_X_Cone = 0.0f, translate_Y_Cone = 0.0f, rotateAngle_Cone = 0.0f, scale_X_Cone = 1.0f, scale_Y_Cone = 1.0f;
@@ -175,6 +160,79 @@ GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path
 	return ProgramID;
 }
 
+float** readPoints(const std::string& filename, int& numLists, int*& vertexCounts) {
+    std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        std::cout << "Failed to open file" << std::endl;
+        return nullptr;
+    }
+
+    std::vector<std::vector<float>> nestedPoints; // Store each list of points as a vector
+    std::vector<float> points;                    // Current list of points
+    std::string line;
+
+    int lineCount = 0;
+
+    while (std::getline(file, line)) {
+        if (line == "=") {
+            lineCount++;
+            // End of a nested list, add current points to nestedPoints
+            if (!points.empty()) {
+
+                if(lineCount == 4 || lineCount == 1){ // calculate the centroid
+                    float x = 0, y = 0;
+                    for(int i = 0; i < points.size(); i+=3){
+                        x += points[i];
+                        y += points[i+1];
+                    }
+                    x /= points.size()/3;
+                    y /= points.size()/3;
+                    points[0] = x, points[1] = y, points[2] = 0.0f;
+                    // points.push_back(x);
+                    // points.push_back(y);
+                    // points.push_back(0.0f);
+                }
+
+                nestedPoints.push_back(points);
+                points.clear(); // Reset for the next list
+            }
+        } else {
+            std::istringstream iss(line);
+            float x, y;
+            char ch;
+            if (iss >> x >> ch >> y && ch == ',') {
+                points.push_back(x*0.6f);
+                points.push_back(y);
+                points.push_back(0.0f); // z-coordinate
+            }
+        }
+    }
+
+    // Add the last set of points, if any, after the last "=" line
+    if (!points.empty()) {
+        nestedPoints.push_back(points);
+    }
+
+    // Convert nestedPoints to a 2D float array
+    numLists = nestedPoints.size();
+    vertexCounts = new int[numLists]; // Track vertex count for each list
+    float** vertexArrays = new float*[numLists];
+
+    for (int i = 0; i < numLists; ++i) {
+        int size = nestedPoints[i].size();
+        vertexCounts[i] = size; // Total number of floats in each list
+        vertexArrays[i] = new float[size];
+
+        // Copy points to 2D array
+        for (int j = 0; j < size; ++j) {
+            vertexArrays[i][j] = nestedPoints[i][j];
+        }
+    }
+
+    return vertexArrays;
+}
+
 int main()
 {
     GLFWwindow* window = nullptr;
@@ -188,17 +246,15 @@ int main()
         "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\project\\src\\fragment_shader.fs"
     );
     
-    static const GLfloat g_vertex_buffer_data[] = {
-        -1.0f, -1.0f, 0.0f,
-        1.0f, -1.0f, 0.0f,
-        0.0f,  1.0f, 0.0f,
-    };
-
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
     glUseProgram(programID);
     
     unsigned int transformLoc = glGetUniformLocation(programID, "transform");
     unsigned int colorLocation = glGetUniformLocation(programID, "color");
+
+    Point point1(0.0f, 0.5f); // Top vertex
+    Point point2(-0.5f, -0.5f); // Bottom-left vertex
+    Point point3(0.5f, -0.5f); // Bottom-right vertex
+    Triangle triangle(point1, point2, point3);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -222,9 +278,11 @@ int main()
         glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0 );
 
         // draw 
-        glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
-        glDisableVertexAttribArray(0);
+        triangle.draw(transformLoc, colorLocation, modelMatrix);
 
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        
+        glDisableVertexAttribArray(0);
         // swap buffer
         glfwSwapBuffers(window);
         glfwPollEvents();
