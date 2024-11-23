@@ -9,7 +9,6 @@
 #include "common/MyClasses.cpp"
 #include "common/Shader.h"
 #include "common/BasicCamera.h"
-#include "common/Camera.h"
 
 #include <unordered_map>
 #include <memory>
@@ -64,13 +63,10 @@ float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
-float eyeX = 2.0f, eyeY = 0.0f, eyeZ = 13.5f;
-float lookAtX = 2.0f, lookAtY = 1.5f, lookAtZ = 4.75f;
+float eyeX = 1.35, eyeY = 4.8, eyeZ = 10.0;
+float lookAtX = 4.0, lookAtY = 4.0, lookAtZ = 6.0;
 glm::vec3 V = glm::vec3(0.0f, 1.0f, 0.0f);
-glm::vec3 eye = glm::vec3(eyeX, eyeY, eyeZ);
-glm::vec3 lookAt = glm::vec3(lookAtX, lookAtY, lookAtZ);
 BasicCamera basic_camera(eyeX, eyeY, eyeZ, lookAtX, lookAtY, lookAtZ, V);
-Camera camera(glm::vec3(eyeX, eyeY, eyeZ));
 
 // timing
 float deltaTime = 0.0f;    // time between current frame and last frame
@@ -326,20 +322,19 @@ int drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
         // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
     
     // floor
-    drawCube(ourShader, VAO, identityMatrix, 0,0,0, 0,0,0, 10,.1,10, 0.65, 0.70, 0.73);
+    drawCube(ourShader, VAO, identityMatrix, 0,0,0, 0,0,0, 5,.1,5, 0.65, 0.70, 0.73);
     
     
     // right wall
-    drawCube(ourShader, VAO, identityMatrix, 0,2, -2.5, 0,0,0,  10,8,.1, 128/255.0, 128/255.0, 128/255.0);
-    
-    return -1;
+    drawCube(ourShader, VAO, identityMatrix, 0,.1, 0, 0,0,0,  5,5,.1, 128/255.0, 128/255.0, 128/255.0);
     // left wall
-    drawCube(ourShader, VAO, identityMatrix, -2.5,2, 0, 0,0,0,  .1,8,10, 255/255.0, 200/255.0, 220/255.0);
+    drawCube(ourShader, VAO, identityMatrix, 0,.1, 0, 0,0,0,  .1,5,5, 255/255.0, 200/255.0, 220/255.0);
 
     // right shelf
-    drawCube(ourShader, VAO, identityMatrix, -.5, 2.5, -2, 0,0,0, 8, .1, 2, 227/255.0, 193/255.0, 166/255.0);
+    drawCube(ourShader, VAO, identityMatrix, 0.1, 1.5, .1, 0,0,0, 4, .1, 1.2, 227/255.0, 193/255.0, 166/255.0);
     // left shelf
-    drawCube(ourShader, VAO, identityMatrix, -2, 2.5, .5, 0,0,0, 2, .1, 9, 227/255.0, 193/255.0, 166/255.0);
+    drawCube(ourShader, VAO, identityMatrix, 0.1, 1.5, .1, 0,0,0, 1.2, .1, 4.9, 227/255.0, 193/255.0, 166/255.0);
+    return -1;
     
     // left wall shelf
     int total = 7;
@@ -426,6 +421,7 @@ int drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
 
 }
 
+
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -500,9 +496,9 @@ void drawCube(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans,
     rotateYMatrix = glm::rotate(rotateXMatrix, glm::radians(rotY), glm::vec3(0.0f, 1.0f, 0.0f));
     rotateZMatrix = glm::rotate(rotateYMatrix, glm::radians(rotZ), glm::vec3(0.0f, 0.0f, 1.0f));
     model = glm::scale(rotateZMatrix, glm::vec3(scX, scY, scZ));
-    modelCentered = glm::translate(model, glm::vec3(-0.25, -0.25, -0.25));
+    //modelCentered = glm::translate(model, glm::vec3(-0.25, -0.25, -0.25));
 
-    shaderProgram.setMat4("model", modelCentered);
+    shaderProgram.setMat4("model", model);
 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
@@ -513,20 +509,18 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    float unit = 0.3;
-
-    if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) translate_Y += unit;
-    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) translate_Y -= unit;
-    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) translate_X += unit;
-    if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) translate_X -= unit;
-    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) translate_Z += unit;
-    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) translate_Z -= unit;
-    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) scale_X += unit;
-    if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) scale_X -= unit;
-    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) scale_Y += unit;
-    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) scale_Y -= unit;
-    if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) scale_Z += unit;
-    if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) scale_Z -= unit;
+    if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) translate_Y += 0.01;
+    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) translate_Y -= 0.01;
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) translate_X += 0.01;
+    if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) translate_X -= 0.01;
+    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) translate_Z += 0.01;
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) translate_Z -= 0.01;
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) scale_X += 0.01;
+    if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) scale_X -= 0.01;
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) scale_Y += 0.01;
+    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) scale_Y -= 0.01;
+    if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) scale_Z += 0.01;
+    if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) scale_Z -= 0.01;
 
     if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) on = true;
     if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) on = false;
