@@ -9,6 +9,7 @@
 #include "common/MyClasses.cpp"
 #include "common/Shader.h"
 #include "common/BasicCamera.h"
+#include "common/Camera.h"
 
 #include <unordered_map>
 #include <memory>
@@ -30,7 +31,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
-void drawAll(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans);
+int drawAll(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans);
 
 void drawCube(
     Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans, 
@@ -63,10 +64,13 @@ float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
-float eyeX = 1.35, eyeY = 4.8, eyeZ = 10.0;
-float lookAtX = 4.0, lookAtY = 4.0, lookAtZ = 6.0;
+float eyeX = 2.0f, eyeY = 0.0f, eyeZ = 13.5f;
+float lookAtX = 2.0f, lookAtY = 1.5f, lookAtZ = 4.75f;
 glm::vec3 V = glm::vec3(0.0f, 1.0f, 0.0f);
+glm::vec3 eye = glm::vec3(eyeX, eyeY, eyeZ);
+glm::vec3 lookAt = glm::vec3(lookAtX, lookAtY, lookAtZ);
 BasicCamera basic_camera(eyeX, eyeY, eyeZ, lookAtX, lookAtY, lookAtZ, V);
+Camera camera(glm::vec3(eyeX, eyeY, eyeZ));
 
 // timing
 float deltaTime = 0.0f;    // time between current frame and last frame
@@ -309,7 +313,7 @@ int main()
     return 0;
 }
 
-void drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
+int drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
 
         // drawCube(ourShader, VAO, identityMatrix, 0.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 20.0f, 0.1f, 20.0f);
         // drawCube(ourShader, VAO, identityMatrix, )
@@ -324,33 +328,101 @@ void drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
     // floor
     drawCube(ourShader, VAO, identityMatrix, 0,0,0, 0,0,0, 10,.1,10, 0.65, 0.70, 0.73);
     
+    
     // right wall
-    drawCube(ourShader, VAO, identityMatrix, 0,2.5,-2.5, 0,0,0,  10,10,.1, 128/255.0, 128/255.0, 128/255.0);
+    drawCube(ourShader, VAO, identityMatrix, 0,2, -2.5, 0,0,0,  10,8,.1, 128/255.0, 128/255.0, 128/255.0);
+    
+    return -1;
     // left wall
-    drawCube(ourShader, VAO, identityMatrix, -2.5,2.5, 0, 0,0,0,  .1,10,10, 255/255.0, 200/255.0, 220/255.0);
+    drawCube(ourShader, VAO, identityMatrix, -2.5,2, 0, 0,0,0,  .1,8,10, 255/255.0, 200/255.0, 220/255.0);
 
     // right shelf
-    drawCube(ourShader, VAO, identityMatrix, -.5, 2.5, -1.5, 0,0,0, 8, .1, 2, 227/255.0, 193/255.0, 166/255.0);
+    drawCube(ourShader, VAO, identityMatrix, -.5, 2.5, -2, 0,0,0, 8, .1, 2, 227/255.0, 193/255.0, 166/255.0);
     // left shelf
     drawCube(ourShader, VAO, identityMatrix, -2, 2.5, .5, 0,0,0, 2, .1, 9, 227/255.0, 193/255.0, 166/255.0);
     
     // left wall shelf
-    for(int i=0; i<5; i++){
-        float gap = (2 / 5.0);
+    int total = 7;
+    for(int i=0; i<total; i++){
+        float gap = (1 / 5.0);
         float width = 1.0;
 
         drawCube(
             ourShader, VAO, identityMatrix,
-            -2, 5.5, .5+(i * width + i*gap), 
+            -2.25, 4.5, -2+(i * width + i*gap), 
             0,0,0,
             .8,1.5, width, 
-            253/255.0, 123/255.0, 65/255.0);
+            241/255.0, 112/255.0, 4/255.0
+        );
+        
+        if(i == total-1) continue;
 
-            // .5 -> 2.5
+        drawCube(
+            ourShader, VAO, identityMatrix,
+            -2.25, 4.5, -2+(i * width + i*gap) + width - gap,
+            0,0,0,
+            .8,1.5, .2,
+            162/255.0, 52/255.0, 0/255.0
+        );
     }
 
-    // drawCube( ourShader, VAO, identityMatrix, -2,5.5, .5,  0,0,0,  1,1,1, 253/255.0, 123/255.0, 65/255.0);
-    // drawCube( ourShader, VAO, identityMatrix, -2,5.5, 2, 0,0,0,  1,1,1, 253/255.0, 123/255.0, 65/255.0);
+    // right wall shelf
+    drawCube( ourShader, VAO, identityMatrix, -1.25, 4.5, -2.25, 0,0,0, .8,1.5, 1,  241/255.0, 112/255.0, 4/255.0 );
+    // right wall shelf white
+    drawCube( ourShader, VAO, identityMatrix, -1.25, 4.5, -1.5, 0,0,0, .7,1.3, .1,  212/255.0, 164/255.0, 141/255.0 );
+    
+    // right wall window?
+    drawCube( ourShader, VAO, identityMatrix, 1.5, 4.5, -2.25, 0,0,0, 3,1.5, .1,  241/255.0, 112/255.0, 4/255.0 );
+    // right wall window? white
+    drawCube( ourShader, VAO, identityMatrix, 1.25, 4.62, -2.0, 0,0,0, 1.32,1.3, .1,  212/255.0, 164/255.0, 141/255.0 );
+    drawCube( ourShader, VAO, identityMatrix, 2.6, 4.62, -2.0, 0,0,0, 1.32,1.3, .1,  212/255.0, 164/255.0, 141/255.0 );
+
+    // table
+    drawCube( ourShader, VAO, identityMatrix, 5, 3, 6, 0,0,0, 3, .1, 2,  25/255.0, 21/255.0, 18/255.0 );
+    drawCube( ourShader, VAO, identityMatrix, 4, 3, 6, 0,0,0, .1,3,.1,  236/255.0, 28/255.0, 36/255.0 );
+
+    // lower shelf left
+    total = 8;
+    for(int i=0; i<total; i++){
+        float gap = (1 / 5.0);
+        float width = 1;
+
+        drawCube( ourShader, VAO, identityMatrix, -2, 0.5, -2+(i * width + i*gap), 
+            0,0,0, 2,2.5, width,  240/255.0, 108/255.0, 36/255.0
+        );
+        
+        if(i == total-1) continue;
+        drawCube( ourShader, VAO, identityMatrix, -2, 0.5, -2+(i * width + i*gap) + width - gap,
+            0,0,0, 2,2.5, .2, 162/255.0, 52/255.0, 0/255.0
+        );
+    }
+
+    // right wall shelf bottom
+    total = 5;
+    for(int i=0; i<total; i++){
+        float gap = (1 / 5.0);
+        float width = 1;
+        
+        drawCube( ourShader, VAO, identityMatrix,  -.25 + (i*width + i*gap), 0.75, -2, 
+            0,0,0, 1, 2.3, 2,  240/255.0, 108/255.0, 36/255.0
+        );
+        
+        if(i == total-1) continue;
+        drawCube( ourShader, VAO, identityMatrix, -.25+(i * width + i*gap + width - gap), .75, -2,
+            0,0,0, .2,2.3, 2, 162/255.0, 52/255.0, 0/255.0
+        );
+    }
+
+    // fridge
+    drawCube( ourShader, VAO, identityMatrix,  6, 1.25, -2, 
+        0,0,0, 2, 4.5, 2,  178/255.0, 157/255.0, 136/255.0
+    );
+    drawCube( ourShader, VAO, identityMatrix, 5.8, 1.25, -.5, 0,0,0, .95,4.5, .1,  63/255.0, 72/255.0, 204/255.0 );
+    drawCube( ourShader, VAO, identityMatrix, 6.8, 1.25, -.5, 0,0,0, .95,4.5, .1,  63/255.0, 72/255.0, 204/255.0 );
+
+    drawCube( ourShader, VAO, identityMatrix, 6.9, 2, -.4, 0,0,0, .1, 1, .1,  255/255.0, 255/255.0, 255/255.0 );
+
+    return 0;
 
 }
 
@@ -441,18 +513,20 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) translate_Y += 0.01;
-    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) translate_Y -= 0.01;
-    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) translate_X += 0.01;
-    if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) translate_X -= 0.01;
-    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) translate_Z += 0.01;
-    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) translate_Z -= 0.01;
-    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) scale_X += 0.01;
-    if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) scale_X -= 0.01;
-    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) scale_Y += 0.01;
-    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) scale_Y -= 0.01;
-    if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) scale_Z += 0.01;
-    if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) scale_Z -= 0.01;
+    float unit = 0.3;
+
+    if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) translate_Y += unit;
+    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) translate_Y -= unit;
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) translate_X += unit;
+    if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) translate_X -= unit;
+    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) translate_Z += unit;
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) translate_Z -= unit;
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) scale_X += unit;
+    if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) scale_X -= unit;
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) scale_Y += unit;
+    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) scale_Y -= unit;
+    if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) scale_Z += unit;
+    if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) scale_Z -= unit;
 
     if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) on = true;
     if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) on = false;
