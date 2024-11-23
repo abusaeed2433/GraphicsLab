@@ -44,8 +44,44 @@ public:
         if (Zoom > 45.0f)
             Zoom = 45.0f;
     }
+
+    // processes input received from a mouse input system. Expects the offset value in both the x and y direction.
+    void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
+    {
+        Yaw += xoffset * MouseSensitivity;
+        Pitch += yoffset * MouseSensitivity;
+
+        // make sure that when pitch is out of bounds, screen doesn't get flipped
+        if (constrainPitch)
+        {
+            if (Pitch > 89.0f)
+                Pitch = 89.0f;
+            if (Pitch < -89.0f)
+                Pitch = -89.0f;
+        }
+
+        // update Front, Right and Up Vectors using the updated Euler angles
+        updateCameraVectors();
+    }
+   
+
+
+private:
+    glm::vec3 u;
+    glm::vec3 v;
+    glm::vec3 n;
+
+    // calculates the front vector from the Camera's (updated) Euler Angles
+    void updateCameraVectors()
+    {
+        // calculate the new Front vector
+        glm::vec3 front;
+        front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+        front.y = sin(glm::radians(Pitch));
+        front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+        direction = glm::normalize(front);
+    }
 };
 
 #endif /* basic_camera_h */
 #pragma once
-

@@ -30,7 +30,14 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
-void drawCube(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans, float posX = 0.0, float posY = 0.0, float posz = 0.0, float rotX = 0.0, float rotY = 0.0, float rotZ = 0.0,float scX = 1.0, float scY = 1.0, float scZ=1.0);
+void drawAll(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans);
+
+void drawCube(
+    Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans, 
+    float posX = 0.0, float posY = 0.0, float posz = 0.0, 
+    float rotX = 0.0, float rotY = 0.0, float rotZ = 0.0,
+    float scX = 1.0, float scY = 1.0, float scZ=1.0,
+    float r = 0.0, float g = 0.0, float b = 0.0);
 
 
 // settings
@@ -56,15 +63,22 @@ float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
-float eyeX = 0.0, eyeY = 0.0, eyeZ = 3.0;
-float lookAtX = 0.0, lookAtY = 0.0, lookAtZ = 0.0;
+float eyeX = 1.35, eyeY = 4.8, eyeZ = 10.0;
+float lookAtX = 4.0, lookAtY = 4.0, lookAtZ = 6.0;
 glm::vec3 V = glm::vec3(0.0f, 1.0f, 0.0f);
-BasicCamera basicCamera(eyeX, eyeY, eyeZ, lookAtX, lookAtY, lookAtZ, V);
+BasicCamera basic_camera(eyeX, eyeY, eyeZ, lookAtX, lookAtY, lookAtZ, V);
 
 // timing
 float deltaTime = 0.0f;    // time between current frame and last frame
 float lastFrame = 0.0f;
 
+bool on = false;
+
+//birds eye
+bool birdEye = false;
+glm::vec3 cameraPos(-2.0f, 5.0f, 13.0f); 
+glm::vec3 target(-2.0f, 0.0f, 5.5f);   
+float birdEyeSpeed = 1.0f;
 
 int initGlfw(GLFWwindow*& window){
     glfwInit();
@@ -103,13 +117,10 @@ void initBinding(unsigned int &VAO, unsigned int &VBO, unsigned int &EBO, Shader
     glGenBuffers(1, &EBO);
     
     glBindVertexArray(VAO);
-
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    
-//
-    glBufferData(GL_ARRAY_BUFFER, verticesSize, cube_vertices, GL_STATIC_DRAW);
-
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    
+    glBufferData(GL_ARRAY_BUFFER, verticesSize, cube_vertices, GL_STATIC_DRAW);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesSize, cube_indices, GL_STATIC_DRAW);
 
     // position attribute
@@ -211,13 +222,13 @@ int main()
     // ------------------------------------------------------------------
     float cube_vertices[] = {
         0.0f, 0.0f, 0.0f, 0.3f, 0.8f, 0.5f,
-        0.5f, 0.0f, 0.0f, 0.5f, 0.4f, 0.3f,
-        0.5f, 0.5f, 0.0f, 0.2f, 0.7f, 0.3f,
-        0.0f, 0.5f, 0.0f, 0.6f, 0.2f, 0.8f,
-        0.0f, 0.0f, 0.5f, 0.8f, 0.3f, 0.6f,
-        0.5f, 0.0f, 0.5f, 0.4f, 0.4f, 0.8f,
-        0.5f, 0.5f, 0.5f, 0.2f, 0.3f, 0.6f,
-        0.0f, 0.5f, 0.5f, 0.7f, 0.5f, 0.4f
+        1.0f, 0.0f, 0.0f, 0.5f, 0.4f, 0.3f,
+        1.0f, 1.0f, 0.0f, 0.2f, 0.7f, 0.3f,
+        0.0f, 1.0f, 0.0f, 0.6f, 0.2f, 0.8f,
+        0.0f, 0.0f, 1.0f, 0.8f, 0.3f, 0.6f,
+        1.0f, 0.0f, 1.0f, 0.4f, 0.4f, 0.8f,
+        1.0f, 1.0f, 1.0f, 0.2f, 0.3f, 0.6f,
+        0.0f, 1.0f, 1.0f, 0.7f, 0.5f, 0.4f
     };
     unsigned int cube_indices[] = {
        0, 3, 2,
@@ -242,71 +253,51 @@ int main()
     unsigned int VBO, VAO, EBO;
     initBinding(VAO, VBO, EBO, ourShader, cube_vertices, sizeof(cube_vertices), cube_indices, sizeof(cube_indices));
 
+    float r = 0.0f;
     while (!glfwWindowShouldClose(window))
     {
+        float currentFrame = static_cast<float>(glfwGetTime());
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         processInput(window);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-        glm::mat4 projection = glm::perspective(glm::radians(basicCamera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        //glm::mat4 projection = glm::ortho(-2.0f, +2.0f, -1.5f, +1.5f, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(basic_camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         ourShader.setMat4("projection", projection);
         constantShader.setMat4("projection", projection);
 
         // camera/view transformation
-        glm::mat4 view = basicCamera.createViewMatrix();
+        glm::mat4 view;
+
+        if (birdEye) {
+            glm::vec3 up(0.0f, 1.0f, 0.0f);
+            view = glm::lookAt(cameraPos, target, up);
+        }
+        else {
+            view = basic_camera.createViewMatrix();
+        }
+
+        //glm::mat4 view = basic_camera.createViewMatrix();
         ourShader.setMat4("view", view);
-        constantShader.setMat4("view", view);
-
-
-
-        // Modelling Transformation
-        glm::mat4 identityMatrix = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-        
+        //constantShader.setMat4("view", view);
+        glm::mat4 identityMatrix = glm::mat4(1.0f);
+        glm::mat4 translateMatrix, rotateXMatrix, rotateYMatrix, rotateZMatrix, scaleMatrix, model, modelCentered, translateMatrixprev;
+        translateMatrix = identityMatrix;
+    
         // drawing
-        // drawCube(ourShader, VAO, identityMatrix, translate_X, translate_Y, translate_Z, rotateAngle_X, rotateAngle_Y, rotateAngle_Z, scale_X, scale_Y, scale_Z);
+        drawAll(ourShader, VAO, identityMatrix);
 
-        // drawing
-        // Floor
-        drawCube(ourShader, VAO, identityMatrix, 0.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 20.0f, 0.1f, 20.0f); // Room floor
-
-        // Walls
-        drawCube(ourShader, VAO, identityMatrix, 0.0f, 5.0f, -10.0f, 0.0f, 0.0f, 0.0f, 20.0f, 10.0f, 0.1f); // Back wall
-        drawCube(ourShader, VAO, identityMatrix, -10.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.1f, 10.0f, 20.0f); // Left wall
-        drawCube(ourShader, VAO, identityMatrix, 10.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.1f, 10.0f, 20.0f);  // Right wall
-        drawCube(ourShader, VAO, identityMatrix, 0.0f, 10.0f, 0.0f, 0.0f, 0.0f, 0.0f, 20.0f, 0.1f, 20.0f);  // Ceiling
-
-        // Tables (4 rows, 2 columns)
-        float tableWidth = 2.0f, tableHeight = 1.0f, tableDepth = 1.5f;
-        for (int row = 0; row < 4; ++row) {
-            for (int col = 0; col < 2; ++col) {
-                float x = (col * 5.0f) - 2.5f; // Offset for columns
-                float z = (row * -3.0f) + 2.0f; // Offset for rows
-                drawCube(ourShader, VAO, identityMatrix, x, 0.5f, z, 0.0f, 0.0f, 0.0f, tableWidth, tableHeight, tableDepth); // Table top
-            }
+        if (on)
+        {
+            r += 1;
         }
-
-        // Chairs (placed with offset near tables)
-        float chairWidth = 1.0f, chairHeight = 1.0f, chairDepth = 1.0f;
-        for (int row = 0; row < 4; ++row) {
-            for (int col = 0; col < 2; ++col) {
-                float x = (col * 5.0f) - 3.0f; // Offset for columns
-                float z = (row * -3.0f) + 3.0f; // Offset for rows
-                drawCube(ourShader, VAO, identityMatrix, x, 0.5f, z, 0.0f, 0.0f, 0.0f, chairWidth, chairHeight, chairDepth); // Chair seat
-                drawCube(ourShader, VAO, identityMatrix, x, 1.5f, z - 0.5f, 0.0f, 0.0f, 0.0f, chairWidth, chairHeight, 0.2f); // Chair back
-            }
+        else
+        {
+            r = 0.0f;
         }
-
-        // Teacher's Table
-        drawCube(ourShader, VAO, identityMatrix, 0.0f, 0.5f, 8.0f, 0.0f, 0.0f, 0.0f, 3.0f, 1.0f, 2.0f); // Teacher's table
-
-        // Chair for Teacher
-        drawCube(ourShader, VAO, identityMatrix, 0.0f, 0.5f, 6.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);   // Seat
-        drawCube(ourShader, VAO, identityMatrix, 0.0f, 1.5f, 6.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.2f);   // Back
-
-        // Blackboard
-        drawCube(ourShader, VAO, identityMatrix, 0.0f, 5.0f, 9.5f, 0.0f, 0.0f, 0.0f, 8.0f, 4.0f, 0.1f); // Blackboard
 
         // drawing above
         
@@ -318,20 +309,48 @@ int main()
     return 0;
 }
 
+void drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
 
-void processInput(GLFWwindow* window)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+        // drawCube(ourShader, VAO, identityMatrix, 0.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 20.0f, 0.1f, 20.0f);
+        // drawCube(ourShader, VAO, identityMatrix, )
+        // translateMatrix *= glm::translate(identityMatrix, glm::vec3(-5.0f, -1.05f, -4.0));
+        // scaleMatrix = glm::scale(identityMatrix, glm::vec3(13.0f, 0.1, 30.0));
+        // model = translateMatrix* scaleMatrix;
+        // ourShader.setMat4("model", model);
+        // ourShader.setVec4("color", glm::vec4(0.65, 0.70, 0.73, 1.0));
+        // glBindVertexArray(VAO);
+        // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+    
+    // floor
+    drawCube(ourShader, VAO, identityMatrix, 0,0,0, 0,0,0, 10,.1,10, 0.65, 0.70, 0.73);
+    
+    // right wall
+    drawCube(ourShader, VAO, identityMatrix, 0,2.5,-2.5, 0,0,0,  10,10,.1, 128/255.0, 128/255.0, 128/255.0);
+    // left wall
+    drawCube(ourShader, VAO, identityMatrix, -2.5,2.5, 0, 0,0,0,  .1,10,10, 255/255.0, 200/255.0, 220/255.0);
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        basicCamera.eye.z -= 0.1f; // Move forward
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        basicCamera.eye.z += 0.1f; // Move backward
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        basicCamera.eye.x -= 0.1f; // Move left
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        basicCamera.eye.x += 0.1f; // Move right
+    // right shelf
+    drawCube(ourShader, VAO, identityMatrix, -.5, 2.5, -1.5, 0,0,0, 8, .1, 2, 227/255.0, 193/255.0, 166/255.0);
+    // left shelf
+    drawCube(ourShader, VAO, identityMatrix, -2, 2.5, .5, 0,0,0, 2, .1, 9, 227/255.0, 193/255.0, 166/255.0);
+    
+    // left wall shelf
+    for(int i=0; i<5; i++){
+        float gap = (2 / 5.0);
+        float width = 1.0;
+
+        drawCube(
+            ourShader, VAO, identityMatrix,
+            -2, 5.5, .5+(i * width + i*gap), 
+            0,0,0,
+            .8,1.5, width, 
+            253/255.0, 123/255.0, 65/255.0);
+
+            // .5 -> 2.5
+    }
+
+    // drawCube( ourShader, VAO, identityMatrix, -2,5.5, .5,  0,0,0,  1,1,1, 253/255.0, 123/255.0, 65/255.0);
+    // drawCube( ourShader, VAO, identityMatrix, -2,5.5, 2, 0,0,0,  1,1,1, 253/255.0, 123/255.0, 65/255.0);
 
 }
 
@@ -351,6 +370,7 @@ bool isMousePressed = false;
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         if (action == GLFW_PRESS) {
+            firstMouse = true;
             isMousePressed = true;
         } else if (action == GLFW_RELEASE) {
             isMousePressed = false;
@@ -358,62 +378,48 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     }
 }
 
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+{
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-    static bool firstMouse = true;
-    static float lastX = SCR_WIDTH / 2.0f, lastY = SCR_HEIGHT / 2.0f;
-
-    if (firstMouse) {
+    if (firstMouse)
+    {
         lastX = xpos;
         lastY = ypos;
         firstMouse = false;
     }
 
-    if (isMousePressed) {
-        float xOffset = xpos - lastX;
-        float yOffset = lastY - ypos;  // Inverted because y-coordinates go from top to bottom in window
-        lastX = xpos;
-        lastY = ypos;
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
 
-        // Adjust sensitivity for smoother motion
-        xOffset *= basicCamera.MouseSensitivity;
-        yOffset *= basicCamera.MouseSensitivity;
+    lastX = xpos;
+    lastY = ypos;
 
-        // Update yaw and pitch
-        basicCamera.Yaw += xOffset;  // Left drag moves camera right
-        basicCamera.Pitch += yOffset;  // Up drag moves camera down
-
-        // Constrain pitch to prevent flipping
-        if (basicCamera.Pitch > 89.0f)
-            basicCamera.Pitch = 89.0f;
-        if (basicCamera.Pitch < -89.0f)
-            basicCamera.Pitch = -89.0f;
-
-        // Calculate new camera direction
-        glm::vec3 front;
-        front.x = cos(glm::radians(basicCamera.Yaw)) * cos(glm::radians(basicCamera.Pitch));
-        front.y = sin(glm::radians(basicCamera.Pitch));
-        front.z = sin(glm::radians(basicCamera.Yaw)) * cos(glm::radians(basicCamera.Pitch));
-        basicCamera.direction = glm::normalize(front);
-
-        // Update the camera's lookAt point
-        basicCamera.lookAt = basicCamera.eye + basicCamera.direction;
-    }
+    basic_camera.ProcessMouseMovement(xoffset, yoffset);
 }
-
 
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 // ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    basicCamera.ProcessMouseScroll(static_cast<float>(yoffset));
+    basic_camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
-// The parentTrans parameter is here for hiererchical modeling,
+
 // If you are confused with it's usage, then pass an identity matrix to it, and everything will be fine 
-void drawCube(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans, float posX, float posY, float posZ, float rotX , float rotY, float rotZ, float scX, float scY, float scZ)
-{
+void drawCube(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans, 
+    float posX, float posY, float posZ, 
+    float rotX , float rotY, float rotZ, 
+    float scX, float scY, float scZ,
+    float r, float g, float b){   
+    
+
+    int colorLoc = glGetUniformLocation(shaderProgram.ID, "shapeColor");
+    glUniform3f(colorLoc, 1.0f, 0.0f, 0.0f);
+    glUniform3fv(colorLoc, 1, glm::value_ptr(glm::vec3(r,g,b)));
+
     shaderProgram.use();
 
     glm::mat4 translateMatrix, rotateXMatrix, rotateYMatrix, rotateZMatrix, scaleMatrix, model, modelCentered;
@@ -428,4 +434,126 @@ void drawCube(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans, flo
 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+}
+
+void processInput(GLFWwindow* window)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) translate_Y += 0.01;
+    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) translate_Y -= 0.01;
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) translate_X += 0.01;
+    if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) translate_X -= 0.01;
+    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) translate_Z += 0.01;
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) translate_Z -= 0.01;
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) scale_X += 0.01;
+    if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) scale_X -= 0.01;
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) scale_Y += 0.01;
+    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) scale_Y -= 0.01;
+    if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) scale_Z += 0.01;
+    if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) scale_Z -= 0.01;
+
+    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) on = true;
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) on = false;
+
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) birdEye = true;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) birdEye = false;
+    
+
+    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+    {
+        rotateAngle_X += 1;
+    }
+    if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
+    {
+        rotateAngle_Y += 1;
+    }
+    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+    {
+        rotateAngle_Z += 1;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
+    {
+        eyeX += 2.5 * deltaTime;
+        basic_camera.eye = glm::vec3(eyeX, eyeY, eyeZ);
+    }
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+    {
+        eyeX -= 2.5 * deltaTime;
+        basic_camera.eye = glm::vec3(eyeX, eyeY, eyeZ);
+
+        //cout << "x: "<<eyeX << endl;
+    }
+    if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
+    {
+        eyeZ += 2.5 * deltaTime;
+        basic_camera.eye = glm::vec3(eyeX, eyeY, eyeZ);
+    }
+    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
+    {
+        eyeZ -= 2.5 * deltaTime;
+        basic_camera.eye = glm::vec3(eyeX, eyeY, eyeZ);
+        //cout << "z: " << eyeZ << endl;
+    }
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    {
+        eyeY += 2.5 * deltaTime;
+        basic_camera.eye = glm::vec3(eyeX, eyeY, eyeZ);
+        //cout << "y: " << eyeY << endl;
+    }
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    {
+        eyeY -= 2.5 * deltaTime;
+        basic_camera.eye = glm::vec3(eyeX, eyeY, eyeZ);
+    }
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+    {
+        lookAtX += 2.5 * deltaTime;
+        basic_camera.lookAt = glm::vec3(lookAtX, lookAtY, lookAtZ);
+    }
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+    {
+        lookAtX -= 2.5 * deltaTime;
+        basic_camera.lookAt = glm::vec3(lookAtX, lookAtY, lookAtZ);
+    }
+    if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+    {
+        lookAtY += 2.5 * deltaTime;
+        basic_camera.lookAt = glm::vec3(lookAtX, lookAtY, lookAtZ);
+    }
+    if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
+    {
+        lookAtY -= 2.5 * deltaTime;
+        basic_camera.lookAt = glm::vec3(lookAtX, lookAtY, lookAtZ);
+    }
+
+    if (birdEye) {
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            cameraPos.z -= birdEyeSpeed * deltaTime; 
+            target.z -= birdEyeSpeed * deltaTime;
+            if (cameraPos.z <= 4.0) {
+                cameraPos.z = 4.0;
+            }
+            
+            if (target.z <= -3.5) {
+                target.z = -3.5;
+            }
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            cameraPos.z += birdEyeSpeed * deltaTime; 
+            target.z += birdEyeSpeed * deltaTime;
+            /*cout << "tgt: " << target.z << endl;
+            cout << "pos: " << cameraPos.z << endl;*/
+            if (cameraPos.z >= 13.5) {
+                cameraPos.z = 13.5;
+            }
+            if (target.z >= 6.0) {
+                target.z = 6.0;
+            }
+        }
+    }
+
+    
 }
