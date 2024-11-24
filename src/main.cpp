@@ -458,6 +458,16 @@ int drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
     drawCube( ourShader, VAO, identityMatrix,  3.2,2.1,.3, 0,0,0, .05,.05,.3,  200/255.0, 200/255.0, 200/255.0);
     drawCube( ourShader, VAO, identityMatrix,  3.2,2.0,.6, 0,0,0, .05,.2,.05,  200/255.0, 200/255.0, 200/255.0);
 
+    // microwave
+    drawCube(ourShader, VAO, identityMatrix, 0.1, 1.6, 4, 0,0,0, .8, .5, 1.2, 154/255.0, 134/255.0, 108/255.0);
+    drawCube(ourShader, VAO, identityMatrix, 0.9, 1.6, 4.35, 0,0,0, .05, .5, .8, 20/255.0, 20/255.0, 20/255.0);
+
+    total = 15;
+    unit = (.5 / (2*total));
+    for(int z=0; z<total; z++){
+        // drawCube( ourShader, VAO, identityMatrix,  2,1.63, (z+1)*2*unit, 0,0,0, 1,.01,unit/2,  60/255.0, 60/255.0, 60/255.0);
+        drawCube(ourShader, VAO, identityMatrix, 0.9, 1.6+(z+1)*2*unit, 4.05, 0,0,0, .05, unit/4, .3, 255/255.0, 255/255.0, 255/255.0);
+    }
 
     return 0;
 
