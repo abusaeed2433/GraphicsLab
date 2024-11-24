@@ -397,36 +397,67 @@ int drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
     drawCube( ourShader, VAO, identityMatrix,  4,0,0, 0,0,0, 2, 3.5, 1.5,  178/255.0, 157/255.0, 136/255.0);
     drawCube( ourShader, VAO, identityMatrix, 4.05,0,1.5, 0,0,0, .95,3.5, .05,  163/255.0, 143/255.0, 88/255.0 );
     drawCube( ourShader, VAO, identityMatrix, 5.05,0,1.5, 0,0,0, .95,3.5, .05,  163/255.0, 143/255.0, 88/255.0 );
+    // fridge handle
+    drawCube( ourShader, VAO, identityMatrix, 4.9,1.5,1.55, 0,0,0, .05,1.1, .05,  20/255.0, 20/255.0, 20/255.0 );
+    drawCube( ourShader, VAO, identityMatrix, 5.1,1.5,1.55, 0,0,0, .05,1.1, .05,  20/255.0, 20/255.0, 20/255.0 );
 
     //drawCube( ourShader, VAO, identityMatrix, 6.9, 2, -.4, 0,0,0, .1, 1, .1,  255/255.0, 255/255.0, 255/255.0 );
 
-    // // table-top
-    // drawCube( ourShader, VAO, identityMatrix, 3, 1.5, 3, 0,0,0, 2, .1, 2,  25/255.0, 21/255.0, 18/255.0 );
-    // // left top leg
-    // drawCube( ourShader, VAO, identityMatrix, 3, 0, 3, 0,0,0, .1, 1.5, .1,  255/255.0, 21/255.0, 18/255.0 );
-    // // right top leg
-    // drawCube( ourShader, VAO, identityMatrix, 4.9, 0, 3, 0,0,0, .1, 1.5, .1,  255/255.0, 21/255.0, 18/255.0 );
-    // // left bottom leg
-    // drawCube( ourShader, VAO, identityMatrix, 3, 0, 4.9, 0,0,0, .1, 1.5, .1,  255/255.0, 21/255.0, 18/255.0 );
-    // // right bottom leg
-    // drawCube( ourShader, VAO, identityMatrix, 4.9, 0, 4.9, 0,0,0, .1, 1.5, .1,  255/255.0, 21/255.0, 18/255.0 );
+    // table-top
+    drawCube( ourShader, VAO, identityMatrix, 3, 1.5, 4, 0,0,0, 2, .1, 1.5,  25/255.0, 21/255.0, 18/255.0 );
+    // left top leg
+    drawCube( ourShader, VAO, identityMatrix, 3, 0, 4, 0,0,0, .1, 1.5, .1,  255/255.0, 21/255.0, 18/255.0 );
+    // right top leg
+    drawCube( ourShader, VAO, identityMatrix, 4.9, 0, 4, 0,0,0, .1, 1.5, .1,  255/255.0, 21/255.0, 18/255.0 );
+    // left bottom leg
+    drawCube( ourShader, VAO, identityMatrix, 3, 0, 5.4, 0,0,0, .1, 1.5, .1,  255/255.0, 21/255.0, 18/255.0 );
+    // right bottom leg
+    drawCube( ourShader, VAO, identityMatrix, 4.9, 0, 5.4, 0,0,0, .1, 1.5, .1,  255/255.0, 21/255.0, 18/255.0 );
+
+    for(int z=0; z<2; z++){
+        for(int x=0; x<2; x++){
+            float width = 0.5;
+            float gap = 0.4;
+            int zz = (z == 0) ? 1 : 0;
+
+            // chairs
+            drawCube( ourShader, VAO, identityMatrix, (width+gap)*x+3.2,.8,(z*2+3), 0,0,0, .5, .1, .5,  75/255.0, 62/255.0, 53/255.0 );
+            // left top leg
+            drawCube( ourShader, VAO, identityMatrix, (width+gap)*x+3.2,0,(z*2+3), 0,0,0, .1, (.8 + zz*.7), .1,  75/255.0, 62/255.0, 53/255.0 );
+
+            
+            // left left leg
+            drawCube( ourShader, VAO, identityMatrix, (width+gap)*x+3.33,0.9,(z*2+3+.5*z - z*.1), 0,0,0, .05, .6, .1,  75/255.0, 62/255.0, 53/255.0 );
+            // left mid leg
+            drawCube( ourShader, VAO, identityMatrix, (width+gap)*x+3.44,0.9,(z*2+3+.5*z - z*.1), 0,0,0, .05, .6, .1,  75/255.0, 62/255.0, 53/255.0 );
+            // left right leg
+            drawCube( ourShader, VAO, identityMatrix, (width+gap)*x+3.55,0.9,(z*2+3+.5*z - z*.1), 0,0,0, .05, .6, .1,  75/255.0, 62/255.0, 53/255.0 );
 
 
-    for(int i=3; i<4; i++){
-        // chairs
-        drawCube( ourShader, VAO, identityMatrix, 3.2, 1, 3, 0,0,0, .5, .1, .5,  255/255.0, 255/255.0, 255/255.0 );
-        // left top leg
-        drawCube( ourShader, VAO, identityMatrix, 3.2, 0, 3, 0,0,0, .1, 1, .1,  255/255.0, 255/255.0, 255/255.0 );
-        // right top leg
-        drawCube( ourShader, VAO, identityMatrix, 3.6, 0, 3, 0,0,0, .1, 1, .1,  255/255.0, 255/255.0, 255/255.0 );
-        // left bottom leg
-        drawCube( ourShader, VAO, identityMatrix, 3.2, 0, 3.4, 0,0,0, .1, 1, .1,  255/255.0, 255/255.0, 255/255.0 );
-        // right bottom leg
-        drawCube( ourShader, VAO, identityMatrix, 3.6, 0, 3.4, 0,0,0, .1, 1, .1,  255/255.0, 255/255.0, 255/255.0 );
+            // right top leg
+            drawCube( ourShader, VAO, identityMatrix, (width+gap)*x+3.6,0,(z*2+3), 0,0,0, .1, (.8+.7*zz), .1,  75/255.0, 62/255.0, 53/255.0 );
+
+            zz = !zz;
+            // left bottom leg
+            drawCube( ourShader, VAO, identityMatrix, (width+gap)*x+3.2,0,(z*2+3.4), 0,0,0, .1, (.8+.7*zz), .1,  75/255.0, 62/255.0, 53/255.0 );
+            // right bottom leg
+            drawCube( ourShader, VAO, identityMatrix, (width+gap)*x+3.6,0,(z*2+3.4), 0,0,0, .1, (.8+.7*zz), .1,  75/255.0, 62/255.0, 53/255.0 );
+        }
     }
 
 
-    //drawCube( ourShader, VAO, identityMatrix, 4, 3, 6, 0,0,0, .1,3,.1,  236/255.0, 28/255.0, 36/255.0 );
+    // tap
+    drawCube( ourShader, VAO, identityMatrix,  2,1.6,.1, 0,0,0, 1.5,.02,1.3,  24/255.0, 21/255.0, 22/255.0);
+    total = 20;
+    float unit = (1.3 / (2*total));
+    for(int z=0; z<total; z++){
+        drawCube( ourShader, VAO, identityMatrix,  2,1.63, (z+1)*2*unit, 0,0,0, 1,.01,unit/2,  60/255.0, 60/255.0, 60/255.0);
+    }
+    // the real tap
+    drawCube( ourShader, VAO, identityMatrix,  3.2,1.6,.3, 0,0,0, .05,.5,.05,  200/255.0, 200/255.0, 200/255.0);
+    drawCube( ourShader, VAO, identityMatrix,  3.2,2.1,.3, 0,0,0, .05,.05,.3,  200/255.0, 200/255.0, 200/255.0);
+    drawCube( ourShader, VAO, identityMatrix,  3.2,2.0,.6, 0,0,0, .05,.2,.05,  200/255.0, 200/255.0, 200/255.0);
+
 
     return 0;
 
