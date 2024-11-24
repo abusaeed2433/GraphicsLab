@@ -322,100 +322,111 @@ int drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
         // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
     
     // floor
-    drawCube(ourShader, VAO, identityMatrix, 0,0,0, 0,0,0, 5,.1,5, 0.65, 0.70, 0.73);
+    drawCube(ourShader, VAO, identityMatrix, 0,0,0, 0,0,0, 6,.1,6, 0.65, 0.70, 0.73);
     
     
     // right wall
-    drawCube(ourShader, VAO, identityMatrix, 0,.1, 0, 0,0,0,  5,5,.1, 128/255.0, 128/255.0, 128/255.0);
+    drawCube(ourShader, VAO, identityMatrix, 0,.1, 0, 0,0,0,  6,5,.1, 128/255.0, 128/255.0, 128/255.0);
     // left wall
-    drawCube(ourShader, VAO, identityMatrix, 0,.1, 0, 0,0,0,  .1,5,5, 255/255.0, 200/255.0, 220/255.0);
+    drawCube(ourShader, VAO, identityMatrix, 0,.1, 0, 0,0,0,  .1,5,6, 255/255.0, 200/255.0, 220/255.0);
 
     // right shelf
     drawCube(ourShader, VAO, identityMatrix, 0.1, 1.5, .1, 0,0,0, 4, .1, 1.2, 227/255.0, 193/255.0, 166/255.0);
     // left shelf
-    drawCube(ourShader, VAO, identityMatrix, 0.1, 1.5, .1, 0,0,0, 1.2, .1, 4.9, 227/255.0, 193/255.0, 166/255.0);
-    return -1;
+    drawCube(ourShader, VAO, identityMatrix, 0.1, 1.5, .1, 0,0,0, 1.2, .1, 5.9, 227/255.0, 193/255.0, 166/255.0);
     
     // left wall shelf
-    int total = 7;
+    int total = 4;
     for(int i=0; i<total; i++){
-        float gap = (1 / 5.0);
-        float width = 1.0;
+        float gap = (1 / 10.0);
+        float width = .8;
 
-        drawCube(
-            ourShader, VAO, identityMatrix,
-            -2.25, 4.5, -2+(i * width + i*gap), 
-            0,0,0,
-            .8,1.5, width, 
-            241/255.0, 112/255.0, 4/255.0
+        drawCube( ourShader, VAO, identityMatrix, 0, 2.5, (i * width + i*gap), 
+            0,0,0, .6,1, width, 241/255.0, 112/255.0, 4/255.0
         );
         
         if(i == total-1) continue;
-
-        drawCube(
-            ourShader, VAO, identityMatrix,
-            -2.25, 4.5, -2+(i * width + i*gap) + width - gap,
-            0,0,0,
-            .8,1.5, .2,
-            162/255.0, 52/255.0, 0/255.0
+        drawCube( ourShader, VAO, identityMatrix, 0, 2.5, (i * width + i*gap) + width,
+            0,0,0, .6,1,gap, 162/255.0, 52/255.0, 0/255.0
         );
     }
-
     // right wall shelf
-    drawCube( ourShader, VAO, identityMatrix, -1.25, 4.5, -2.25, 0,0,0, .8,1.5, 1,  241/255.0, 112/255.0, 4/255.0 );
+    drawCube( ourShader, VAO, identityMatrix, .65, 2.5,0, 0,0,0, .8,1,.6,  241/255.0, 112/255.0, 4/255.0 );
     // right wall shelf white
-    drawCube( ourShader, VAO, identityMatrix, -1.25, 4.5, -1.5, 0,0,0, .7,1.3, .1,  212/255.0, 164/255.0, 141/255.0 );
+    drawCube( ourShader, VAO, identityMatrix, .65, 2.55,.6, 0,0,0, .7,.9,.05,  212/255.0, 164/255.0, 141/255.0 );
     
     // right wall window?
-    drawCube( ourShader, VAO, identityMatrix, 1.5, 4.5, -2.25, 0,0,0, 3,1.5, .1,  241/255.0, 112/255.0, 4/255.0 );
+    drawCube( ourShader, VAO, identityMatrix, 2, 2, .1, 0,0,0, 2,1.5,.1,  241/255.0, 112/255.0, 4/255.0 );
     // right wall window? white
-    drawCube( ourShader, VAO, identityMatrix, 1.25, 4.62, -2.0, 0,0,0, 1.32,1.3, .1,  212/255.0, 164/255.0, 141/255.0 );
-    drawCube( ourShader, VAO, identityMatrix, 2.6, 4.62, -2.0, 0,0,0, 1.32,1.3, .1,  212/255.0, 164/255.0, 141/255.0 );
-
-    // table
-    drawCube( ourShader, VAO, identityMatrix, 5, 3, 6, 0,0,0, 3, .1, 2,  25/255.0, 21/255.0, 18/255.0 );
-    drawCube( ourShader, VAO, identityMatrix, 4, 3, 6, 0,0,0, .1,3,.1,  236/255.0, 28/255.0, 36/255.0 );
+    drawCube( ourShader, VAO, identityMatrix, 2.05, 2.05, .15, 0,0,0, .9,1.4, .1,  212/255.0, 164/255.0, 141/255.0 );
+    drawCube( ourShader, VAO, identityMatrix, 3.05, 2.05, .15, 0,0,0, .9,1.4, .1,  212/255.0, 164/255.0, 141/255.0 );
 
     // lower shelf left
-    total = 8;
+    total = 6;
     for(int i=0; i<total; i++){
-        float gap = (1 / 5.0);
-        float width = 1;
+        float gap = (1 / 10.0);
+        float width = .8;
 
-        drawCube( ourShader, VAO, identityMatrix, -2, 0.5, -2+(i * width + i*gap), 
-            0,0,0, 2,2.5, width,  240/255.0, 108/255.0, 36/255.0
+        drawCube( ourShader, VAO, identityMatrix, 0, 0, .5+(i * width + i*gap), 
+            0,0,0, 1.2,1.5, width, 241/255.0, 112/255.0, 4/255.0
         );
         
         if(i == total-1) continue;
-        drawCube( ourShader, VAO, identityMatrix, -2, 0.5, -2+(i * width + i*gap) + width - gap,
-            0,0,0, 2,2.5, .2, 162/255.0, 52/255.0, 0/255.0
+        drawCube( ourShader, VAO, identityMatrix, 0, 0, .5+(i * width + i*gap) + width,
+            0,0,0, 1.2,1.5,gap, 162/255.0, 52/255.0, 0/255.0
         );
     }
 
     // right wall shelf bottom
-    total = 5;
+    total = 4;
     for(int i=0; i<total; i++){
-        float gap = (1 / 5.0);
-        float width = 1;
+        float gap = (1 / 10.0);
+        float width = .6;
         
-        drawCube( ourShader, VAO, identityMatrix,  -.25 + (i*width + i*gap), 0.75, -2, 
-            0,0,0, 1, 2.3, 2,  240/255.0, 108/255.0, 36/255.0
+        drawCube( ourShader, VAO, identityMatrix,  1.2 + (i*width + i*gap), 0, 0, 
+            0,0,0, width, 1.5, 1.2,  240/255.0, 108/255.0, 36/255.0
         );
         
         if(i == total-1) continue;
-        drawCube( ourShader, VAO, identityMatrix, -.25+(i * width + i*gap + width - gap), .75, -2,
-            0,0,0, .2,2.3, 2, 162/255.0, 52/255.0, 0/255.0
+        drawCube( ourShader, VAO, identityMatrix,  1.2 + (i*width + i*gap + width), 0, 0, 
+            0,0,0, gap, 1.5, 1.2, 162/255.0, 52/255.0, 0/255.0
         );
     }
 
     // fridge
-    drawCube( ourShader, VAO, identityMatrix,  6, 1.25, -2, 
-        0,0,0, 2, 4.5, 2,  178/255.0, 157/255.0, 136/255.0
-    );
-    drawCube( ourShader, VAO, identityMatrix, 5.8, 1.25, -.5, 0,0,0, .95,4.5, .1,  63/255.0, 72/255.0, 204/255.0 );
-    drawCube( ourShader, VAO, identityMatrix, 6.8, 1.25, -.5, 0,0,0, .95,4.5, .1,  63/255.0, 72/255.0, 204/255.0 );
+    drawCube( ourShader, VAO, identityMatrix,  4,0,0, 0,0,0, 2, 3.5, 1.5,  178/255.0, 157/255.0, 136/255.0);
+    drawCube( ourShader, VAO, identityMatrix, 4.05,0,1.5, 0,0,0, .95,3.5, .05,  163/255.0, 143/255.0, 88/255.0 );
+    drawCube( ourShader, VAO, identityMatrix, 5.05,0,1.5, 0,0,0, .95,3.5, .05,  163/255.0, 143/255.0, 88/255.0 );
 
-    drawCube( ourShader, VAO, identityMatrix, 6.9, 2, -.4, 0,0,0, .1, 1, .1,  255/255.0, 255/255.0, 255/255.0 );
+    //drawCube( ourShader, VAO, identityMatrix, 6.9, 2, -.4, 0,0,0, .1, 1, .1,  255/255.0, 255/255.0, 255/255.0 );
+
+    // // table-top
+    // drawCube( ourShader, VAO, identityMatrix, 3, 1.5, 3, 0,0,0, 2, .1, 2,  25/255.0, 21/255.0, 18/255.0 );
+    // // left top leg
+    // drawCube( ourShader, VAO, identityMatrix, 3, 0, 3, 0,0,0, .1, 1.5, .1,  255/255.0, 21/255.0, 18/255.0 );
+    // // right top leg
+    // drawCube( ourShader, VAO, identityMatrix, 4.9, 0, 3, 0,0,0, .1, 1.5, .1,  255/255.0, 21/255.0, 18/255.0 );
+    // // left bottom leg
+    // drawCube( ourShader, VAO, identityMatrix, 3, 0, 4.9, 0,0,0, .1, 1.5, .1,  255/255.0, 21/255.0, 18/255.0 );
+    // // right bottom leg
+    // drawCube( ourShader, VAO, identityMatrix, 4.9, 0, 4.9, 0,0,0, .1, 1.5, .1,  255/255.0, 21/255.0, 18/255.0 );
+
+
+    for(int i=3; i<4; i++){
+        // chairs
+        drawCube( ourShader, VAO, identityMatrix, 3.2, 1, 3, 0,0,0, .5, .1, .5,  255/255.0, 255/255.0, 255/255.0 );
+        // left top leg
+        drawCube( ourShader, VAO, identityMatrix, 3.2, 0, 3, 0,0,0, .1, 1, .1,  255/255.0, 255/255.0, 255/255.0 );
+        // right top leg
+        drawCube( ourShader, VAO, identityMatrix, 3.6, 0, 3, 0,0,0, .1, 1, .1,  255/255.0, 255/255.0, 255/255.0 );
+        // left bottom leg
+        drawCube( ourShader, VAO, identityMatrix, 3.2, 0, 3.4, 0,0,0, .1, 1, .1,  255/255.0, 255/255.0, 255/255.0 );
+        // right bottom leg
+        drawCube( ourShader, VAO, identityMatrix, 3.6, 0, 3.4, 0,0,0, .1, 1, .1,  255/255.0, 255/255.0, 255/255.0 );
+    }
+
+
+    //drawCube( ourShader, VAO, identityMatrix, 4, 3, 6, 0,0,0, .1,3,.1,  236/255.0, 28/255.0, 36/255.0 );
 
     return 0;
 
