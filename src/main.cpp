@@ -29,6 +29,7 @@ void processInput(GLFWwindow* window);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+void drawFan(unsigned int VAO, Shader ourShader, glm::mat4 translateMatrix, glm::mat4 sm);
 
 int drawAll(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans);
 
@@ -76,8 +77,8 @@ bool on = false;
 
 //birds eye
 bool birdEye = false;
-glm::vec3 cameraPos(-2.0f, 5.0f, 13.0f); 
-glm::vec3 target(-2.0f, 0.0f, 5.5f);   
+glm::vec3 cameraPos(3.5f, 5.0f, 6.0f);
+glm::vec3 target(3.5f, 0.1f, 3.0f);  
 float birdEyeSpeed = 1.0f;
 
 int initGlfw(GLFWwindow*& window){
@@ -289,16 +290,6 @@ int main()
     
         // drawing
         drawAll(ourShader, VAO, identityMatrix);
-
-        if (on)
-        {
-            r += 1;
-        }
-        else
-        {
-            r = 0.0f;
-        }
-
         // drawing above
         
         glfwSwapBuffers(window);
@@ -309,26 +300,19 @@ int main()
     return 0;
 }
 
-int drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
+float r = 0.0f;
 
-        // drawCube(ourShader, VAO, identityMatrix, 0.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 20.0f, 0.1f, 20.0f);
-        // drawCube(ourShader, VAO, identityMatrix, )
-        // translateMatrix *= glm::translate(identityMatrix, glm::vec3(-5.0f, -1.05f, -4.0));
-        // scaleMatrix = glm::scale(identityMatrix, glm::vec3(13.0f, 0.1, 30.0));
-        // model = translateMatrix* scaleMatrix;
-        // ourShader.setMat4("model", model);
-        // ourShader.setVec4("color", glm::vec4(0.65, 0.70, 0.73, 1.0));
-        // glBindVertexArray(VAO);
-        // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-    
+int drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
     // floor
     drawCube(ourShader, VAO, identityMatrix, 0,0,0, 0,0,0, 6,.1,6, 0.65, 0.70, 0.73);
-    
+
+    // ceiling
+    drawCube(ourShader, VAO, identityMatrix, 0,5,0, 0,0,0, 6,.1,6, 0.8, 0.80, 0.80);
     
     // right wall
-    drawCube(ourShader, VAO, identityMatrix, 0,.1, 0, 0,0,0,  6,5,.1, 128/255.0, 128/255.0, 128/255.0);
+    drawCube(ourShader, VAO, identityMatrix, 0,.1, -.05, 0,0,0,  6,5,.1, 128/255.0, 128/255.0, 128/255.0);
     // left wall
-    drawCube(ourShader, VAO, identityMatrix, 0,.1, 0, 0,0,0,  .1,5,6, 255/255.0, 200/255.0, 220/255.0);
+    drawCube(ourShader, VAO, identityMatrix, -0.05,.1, 0, 0,0,0,  .1,5,6, 255/255.0, 200/255.0, 220/255.0);
 
     // right shelf
     drawCube(ourShader, VAO, identityMatrix, 0.1, 1.5, .1, 0,0,0, 4, .1, 1.2, 227/255.0, 193/255.0, 166/255.0);
@@ -401,8 +385,6 @@ int drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
     drawCube( ourShader, VAO, identityMatrix, 4.9,1.5,1.55, 0,0,0, .05,1.1, .05,  20/255.0, 20/255.0, 20/255.0 );
     drawCube( ourShader, VAO, identityMatrix, 5.1,1.5,1.55, 0,0,0, .05,1.1, .05,  20/255.0, 20/255.0, 20/255.0 );
 
-    //drawCube( ourShader, VAO, identityMatrix, 6.9, 2, -.4, 0,0,0, .1, 1, .1,  255/255.0, 255/255.0, 255/255.0 );
-
     // table-top
     drawCube( ourShader, VAO, identityMatrix, 3, 1.5, 4, 0,0,0, 2, .1, 1.5,  25/255.0, 21/255.0, 18/255.0 );
     // left top leg
@@ -445,7 +427,6 @@ int drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
         }
     }
 
-
     // tap
     drawCube( ourShader, VAO, identityMatrix,  2,1.6,.1, 0,0,0, 1.5,.02,1.3,  24/255.0, 21/255.0, 22/255.0);
     total = 20;
@@ -460,17 +441,109 @@ int drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
 
     // microwave
     drawCube(ourShader, VAO, identityMatrix, 0.1, 1.6, 4, 0,0,0, .8, .5, 1.2, 154/255.0, 134/255.0, 108/255.0);
-    drawCube(ourShader, VAO, identityMatrix, 0.9, 1.6, 4.35, 0,0,0, .05, .5, .8, 20/255.0, 20/255.0, 20/255.0);
+    drawCube(ourShader, VAO, identityMatrix, 0.9, 1.6, 4.35, 0,0,0, .01, .5, .8, 20/255.0, 20/255.0, 20/255.0);
 
     total = 15;
     unit = (.5 / (2*total));
     for(int z=0; z<total; z++){
-        // drawCube( ourShader, VAO, identityMatrix,  2,1.63, (z+1)*2*unit, 0,0,0, 1,.01,unit/2,  60/255.0, 60/255.0, 60/255.0);
-        drawCube(ourShader, VAO, identityMatrix, 0.9, 1.6+(z+1)*2*unit, 4.05, 0,0,0, .05, unit/4, .3, 255/255.0, 255/255.0, 255/255.0);
+        drawCube(ourShader, VAO, identityMatrix, 0.9, 1.6+(z+1)*2*unit, 4.05, 0,0,0, .01, unit/4, .3, 255/255.0, 255/255.0, 255/255.0);
     }
 
-    return 0;
+    // fan, 6, 5, 6
+    //on = true;
+    if (on){
+        r += 1;
+    }
+    else
+    {
+        r = 0.0f;
+    }
 
+    glm::mat4 translateMatrix, scaleMatrix, model, translateMatrixprev, rotateYMatrix;
+    //fan stick
+    translateMatrix = glm::translate(identityMatrix, glm::vec3(3.0, 4.0, 3.0));
+    scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.1f, 0.9f, 0.1));
+    model = translateMatrix * scaleMatrix;
+    ourShader.setMat4("model", model);
+    ourShader.setVec4("color", glm::vec4(0.0, 0.0, 0.0, 1.0));
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+    // fan rotation
+    translateMatrixprev = translateMatrix;
+    glm::mat4 translateMatrix2, translateMatrixBack, test;
+
+    translateMatrix2 = glm::translate(identityMatrix, glm::vec3(3.025, 4.0, 3.025));
+    translateMatrixBack = glm::translate(identityMatrix, glm::vec3(-3.025, -4.0, -3.02));
+    rotateYMatrix = glm::rotate(identityMatrix, glm::radians(r), glm::vec3(0.0, 1.0, 0.0));
+    model = translateMatrixBack * rotateYMatrix * translateMatrix2;
+    drawFan(VAO, ourShader, translateMatrix, rotateYMatrix);
+
+    // drawCube(ourShader, VAO, identityMatrix, 3, 4.1, 3, 0,0,0, .1, .8, .1, 255/255.0, 255/255.0, 255/255.0);
+    // drawCube(ourShader, VAO, identityMatrix, 3.05, 4, 3, 0,r,0, .5, .1, .1, 0/255.0, 255/255.0, 255/255.0);
+    //drawCube(ourShader, VAO, identityMatrix, 3, 4, 3, 0,r,0, .1, .1, .5, 255/255.0, 0/255.0, 255/255.0);
+
+    // drawCube(ourShader, VAO, identityMatrix, 3, 4, 3, 0,r,0, .6, .1, .1, 255/255.0, 255/255.0, 0/255.0);
+    // drawCube(ourShader, VAO, identityMatrix, 3, 4, 3, 0,r,0, .1, .1, .6, 255/255.0, 220/255.0, 255/255.0);
+
+    return 0;
+}
+
+void drawFan(unsigned int VAO, Shader ourShader, glm::mat4 translateMatrix, glm::mat4 sm)
+{
+    glm::mat4 identityMatrix = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+    glm::mat4 rotateXMatrix, rotateYMatrix, rotateZMatrix, scaleMatrix, model, modelCentered, translateMatrixprev;
+    glm::mat4 middleTranslate, leftBladeTranslate, frontBladeTranslate, rightBladeTranslate, backBladeTranslate;
+    //fan middle part
+    //translateMatrix = translateMatrix * glm::translate(identityMatrix, glm::vec3(-0.2, -1.5, -0.2));
+    middleTranslate = glm::translate(identityMatrix, glm::vec3(-0.2, 0.0, -0.2));
+    scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.5f, -0.1f, 0.5));
+    model = translateMatrix * sm * middleTranslate * scaleMatrix;
+    ourShader.setMat4("model", model);
+    ourShader.setVec4("shapeColor", glm::vec4(1.0, 1.0, 1.0, 1.0));
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+    translateMatrixprev = translateMatrix;
+    //left fan
+    //translateMatrix = translateMatrix * glm::translate(identityMatrix, glm::vec3(0.0, -0.075, 0.0));
+    leftBladeTranslate = glm::translate(identityMatrix, glm::vec3(-0.2, 0.0, -0.2));
+    scaleMatrix = glm::scale(identityMatrix, glm::vec3(-2.0f, -0.1f, 0.5));
+    model = translateMatrix * sm * leftBladeTranslate * scaleMatrix;
+    ourShader.setMat4("model", model);
+    ourShader.setVec4("shapeColor", glm::vec4(0.5, 0.6, 0.5, 1.0));
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+    //front fan
+    //translateMatrix = translateMatrixprev * glm::translate(identityMatrix, glm::vec3(0.0, -0.075, 0.5));
+    frontBladeTranslate = glm::translate(identityMatrix, glm::vec3(-0.2, 0.0, 0.3));
+    scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.5f, -0.1f, 2.0));
+    model = translateMatrix * sm * frontBladeTranslate * scaleMatrix;
+    ourShader.setMat4("model", model);
+    ourShader.setVec4("shapeColor", glm::vec4(0.5, 0.6, 0.5, 1.0));
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+    //right fan
+    //translateMatrix = translateMatrix * glm::translate(identityMatrix, glm::vec3(0.5, 0.0, 0.0));
+    rightBladeTranslate = glm::translate(identityMatrix, glm::vec3(0.25, 0.0, 0.25));
+    scaleMatrix = glm::scale(identityMatrix, glm::vec3(2.0f, -0.1f, -0.5));
+    model = translateMatrix * sm * rightBladeTranslate * scaleMatrix;
+    ourShader.setMat4("model", model);
+    ourShader.setVec4("shapeColor", glm::vec4(0.5, 0.6, 0.5, 1.0));
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+    //back fan
+    //translateMatrix = translateMatrix * glm::translate(identityMatrix, glm::vec3(0.0, 0.0, -0.5));
+    backBladeTranslate = glm::translate(identityMatrix, glm::vec3(0.25, 0.0, -0.25));
+    scaleMatrix = glm::scale(identityMatrix, glm::vec3(-0.5f, -0.1f, -2.0));
+    model = translateMatrix * sm * backBladeTranslate * scaleMatrix;
+    ourShader.setMat4("model", model);
+    ourShader.setVec4("shapeColor", glm::vec4(0.5, 0.6, 0.5, 1.0));
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
 
 
@@ -653,12 +726,12 @@ void processInput(GLFWwindow* window)
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
             cameraPos.z -= birdEyeSpeed * deltaTime; 
             target.z -= birdEyeSpeed * deltaTime;
-            if (cameraPos.z <= 4.0) {
-                cameraPos.z = 4.0;
+            if (cameraPos.z >= 6.0) {
+                cameraPos.z = 6.0;
             }
             
-            if (target.z <= -3.5) {
-                target.z = -3.5;
+            if (target.z >= 3.0) {
+                target.z = 3.0;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
@@ -666,14 +739,12 @@ void processInput(GLFWwindow* window)
             target.z += birdEyeSpeed * deltaTime;
             /*cout << "tgt: " << target.z << endl;
             cout << "pos: " << cameraPos.z << endl;*/
-            if (cameraPos.z >= 13.5) {
-                cameraPos.z = 13.5;
+            if (cameraPos.z <= 4.0) {
+                cameraPos.z = 4.0;
             }
-            if (target.z >= 6.0) {
-                target.z = 6.0;
+            if (target.z <= 1.0) {
+                target.z = 1.0;
             }
         }
     }
-
-    
 }
