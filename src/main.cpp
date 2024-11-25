@@ -32,6 +32,15 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 void drawFan(unsigned int VAO, Shader ourShader, glm::mat4 translateMatrix, glm::mat4 sm);
 
 int drawAll(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans);
+void drawCylinder(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans,
+    float centerX, float centerY, float centerZ,
+    float radius, float height, int segments,
+    float r, float g, float b);
+
+void drawFilledCircle(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans,
+    float centerX, float centerY, float centerZ,
+    float radius, int segmentsPerRing, int rings,
+    float r, float g, float b);
 
 void drawCube(
     Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans, 
@@ -479,15 +488,86 @@ int drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
     model = translateMatrixBack * rotateYMatrix * translateMatrix2;
     drawFan(VAO, ourShader, translateMatrix, rotateYMatrix);
 
-    // drawCube(ourShader, VAO, identityMatrix, 3, 4.1, 3, 0,0,0, .1, .8, .1, 255/255.0, 255/255.0, 255/255.0);
-    // drawCube(ourShader, VAO, identityMatrix, 3.05, 4, 3, 0,r,0, .5, .1, .1, 0/255.0, 255/255.0, 255/255.0);
-    //drawCube(ourShader, VAO, identityMatrix, 3, 4, 3, 0,r,0, .1, .1, .5, 255/255.0, 0/255.0, 255/255.0);
-
-    // drawCube(ourShader, VAO, identityMatrix, 3, 4, 3, 0,r,0, .6, .1, .1, 255/255.0, 255/255.0, 0/255.0);
-    // drawCube(ourShader, VAO, identityMatrix, 3, 4, 3, 0,r,0, .1, .1, .6, 255/255.0, 220/255.0, 255/255.0);
+    // basket
+    drawCylinder(ourShader, VAO, glm::mat4(1.0f), 
+            5.2, 0, 2.5,
+            .5, 1,        // Radius and height
+            144,
+            120/255.0, 34/255.0, 36/255.0);
+    
+    // drawFilledCircle(ourShader, VAO, glm::mat4(1.0f),
+    //             5.2, 1.5f, 2.5f,  // Center position
+    //             1.0f,              // Radius
+    //             10, 10,             // Segments per ring, number of rings
+    //             120/255.0, 34/255.0, 36/255.0);
 
     return 0;
 }
+
+void drawCylinder(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans,
+                  float centerX, float centerY, float centerZ,
+                  float radius, float height, int segments,
+                  float r, float g, float b) {
+    // Angle step for each segment
+    float angleStep = 360.0f / segments;
+
+    for (int i = 0; i < segments; ++i) {
+        float angle = glm::radians(i * angleStep);
+        float nextAngle = glm::radians((i + 1) * angleStep);
+
+        // Calculate position of the segment on the circle
+        float posX = centerX + radius * cos(angle);
+        float posZ = centerZ + radius * sin(angle);
+
+        // Cube dimensions
+        float cubeWidth = .02;
+        float cubeHeight = height;
+        float cubeDepth = 0.02; // Narrow depth to approximate a cylinder
+
+        // Cube rotation
+        float rotY = glm::degrees(atan2(sin(angle), cos(angle)));
+
+        // Draw the cube as a cylinder segment
+        drawCube(shaderProgram, VAO, parentTrans,
+                 posX, centerY, posZ,   // Position
+                 0.0f, rotY, 0.0f,     // Rotation
+                 cubeWidth, cubeHeight, cubeDepth, // Scale
+                 r, g, b);             // Color
+    }
+}
+
+void drawFilledCircle(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans,
+                      float centerX, float centerY, float centerZ,
+                      float radius, int segmentsPerRing, int rings,
+                      float r, float g, float b) {
+    for (int ring = 0; ring <= rings; ++ring) {
+        // Calculate the radius of the current ring
+        float ringRadius = (float)ring / rings * radius;
+
+        // Calculate the number of cubes in the ring
+        int segmentCount = segmentsPerRing * (ring + 1);
+
+        for (int i = 0; i < segmentCount; ++i) {
+            // Calculate the angle for the current segment
+            float angle = glm::radians(360.0f / segmentCount * i);
+
+            // Position the cube on the current ring
+            float posX = centerX + ringRadius * cos(angle);
+            float posZ = centerZ + ringRadius * sin(angle);
+
+            // Scale the cubes to be small for smoother approximation
+            float cubeSize = radius / (segmentsPerRing * rings);
+
+            // Draw the cube at the calculated position
+            drawCube(shaderProgram, VAO, parentTrans,
+                     posX, centerY, posZ,  // Position
+                     0.0f, 0.0f, 0.0f,    // Rotation
+                     cubeSize, cubeSize, cubeSize, // Scale
+                     r, g, b);            // Color
+        }
+    }
+}
+
 
 void drawFan(unsigned int VAO, Shader ourShader, glm::mat4 translateMatrix, glm::mat4 sm)
 {
