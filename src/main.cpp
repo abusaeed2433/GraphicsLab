@@ -11,6 +11,7 @@
 #include "common/BasicCamera.h"
 #include "common/Camera.h"
 #include "common/PointLight.h"
+#include "common/sphere.h"
 
 #include <unordered_map>
 #include <memory>
@@ -38,6 +39,11 @@ void drawCylinder(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans,
     float centerX, float centerY, float centerZ,
     float radius, float height, int segments,
     float r, float g, float b);
+
+void drawCone(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans,
+              float centerX, float centerY, float centerZ,
+              float radius, float height, int segments,
+              float r, float g, float b);
 
 void drawFilledCircle(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans,
     float centerX, float centerY, float centerZ,
@@ -126,7 +132,7 @@ int initGlfw(GLFWwindow*& window){
     glfwSetScrollCallback(window, scroll_callback);
 
     // tell GLFW to capture our mouse
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+    //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
     // glad: load all OpenGL function pointers
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) { cout << "Failed to initialize GLAD" << endl; return -1; }
@@ -252,8 +258,8 @@ float far = 100.0f;
 float tanHalfFOV = tan(fov / 2.0f);
 //positions of the point lights
 glm::vec3 pointLightPositions[] = {
-    glm::vec3(2.0f,  2.0f,  2.0f),
-    glm::vec3(2.0f,  2.0f,  8.0f),
+    glm::vec3(3.0f,  3.0f,  4.0f),
+    glm::vec3(3.0f,  3.0f,  4.0f),
 };
 
 PointLight pointlight1(
@@ -333,6 +339,8 @@ int main()
        4, 0, 1
    };
 
+    Cone cone = Cone();
+
     unsigned int VBO, VAO, EBO;
     initBinding(VAO, VBO, EBO, ourShader, cube_vertices, sizeof(cube_vertices), cube_indices, sizeof(cube_indices));
 
@@ -368,7 +376,7 @@ int main()
         lightingShader.setBool("directionLightOn", directionLightOn);
 
         //spot light set up
-        lightingShader.setVec3("spotLight.position", 2.0f, 2.0f, -3.0f);
+        lightingShader.setVec3("spotLight.position", 2.0f, 2.0f, 3.0f);
         lightingShader.setVec3("spotLight.direction", 0.0f, -1.0f, 0.0f);
         lightingShader.setVec3("spotLight.ambient", 0.5f, 0.5f, 0.5f);
         lightingShader.setVec3("spotLight.diffuse", 0.8f, 0.8f, 0.8f);
@@ -458,8 +466,13 @@ int main()
         lightingShader.setVec3("material.emissive", glm::vec3(0.0f, 0.0f, 0.0f));
     
         // drawing
-        // drawAll(ourShader, VAO, identityMatrix);
         drawAll(lightingShader, VAO, identityMatrix);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(3.5f, 1.6f, 4.5f));
+        model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
+        ourShader.setMat4("model", model);
+        ourShader.setVec3("color", glm::vec3(0.8f, 0.8f, 0.8f));
+        cone.drawCone(lightingShader, model);
         // drawing above
 
         //light holder 1 with emissive material property
@@ -476,41 +489,58 @@ int main()
 
         lightingShader.setMat4("model", model);
 
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        // glBindVertexArray(VAO);
+        // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-        //light holder 2 with emissive material property
-        translateMatrix = glm::translate(identityMatrix, glm::vec3(2.08f, 3.5f, 8.08f));
-        scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.04f, -1.5f, 0.04f));
-        model = translateMatrix * scaleMatrix;
-        color = glm::vec3(0.0f, 0.0f, 0.5f);
+        // //light holder 2 with emissive material property
+        // translateMatrix = glm::translate(identityMatrix, glm::vec3(2.08f, 3.5f, 8.08f));
+        // scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.04f, -1.5f, 0.04f));
+        // model = translateMatrix * scaleMatrix;
+        // color = glm::vec3(0.0f, 0.0f, 0.5f);
 
-        lightingShader.setVec3("material.ambient", color);
-        lightingShader.setVec3("material.diffuse", color);
-        lightingShader.setVec3("material.specular", color);
-        lightingShader.setVec3("material.emissive", color);
-        lightingShader.setFloat("material.shininess", 32.0f);
+        // lightingShader.setVec3("material.ambient", color);
+        // lightingShader.setVec3("material.diffuse", color);
+        // lightingShader.setVec3("material.specular", color);
+        // lightingShader.setVec3("material.emissive", color);
+        // lightingShader.setFloat("material.shininess", 32.0f);
 
-        lightingShader.setMat4("model", model);
+        // lightingShader.setMat4("model", model);
 
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        // glBindVertexArray(VAO);
+        // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-        //draw the lamp object(s)
-        ourShader.use();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
+        // //draw the lamp object(s)
+        // ourShader.use();
+        // ourShader.setMat4("projection", projection);
+        // ourShader.setMat4("view", view);
 
-        //we now draw as many light bulbs as we have point lights.
-        glBindVertexArray(lightCubeVAO);
+        // //we now draw as many light bulbs as we have point lights.
+        // glBindVertexArray(lightCubeVAO);
 
         for (unsigned int i = 0; i < 2; i++)
         {
-            translateMatrix = glm::translate(identityMatrix, pointLightPositions[i]);
-            scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.2f, -0.2f, 0.2f));
-            model = translateMatrix * scaleMatrix;
-            ourShader.setMat4("model", model);
-            ourShader.setVec4("color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+            // drawCube(lightingShader, VAO, identityMatrix, 
+            //     pointLightPositions[i].x, pointLightPositions[i].y, pointLightPositions[i].z,
+            //     0,0,0, 
+            //     .2,.2,.2,
+            //     1,1,1,
+            //     100
+            // );
+            // translateMatrix = translate(identityMatrix, pointLightPositions[i]);
+            // scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.2f, 0.2f, 0.2f));
+            // model = translateMatrix * scaleMatrix;
+            // ourShader.setMat4("model", model);
+            // ourShader.setVec4("color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+            // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+            r = 0;
+            translateMatrix = glm::translate(identityMatrix, glm::vec3(2,2,2));//pointLightPositions[i]);//::vec3(-0.2, 0.0, -0.2));
+            scaleMatrix = glm::scale(identityMatrix, glm::vec3(.2f, 0.2f, 0.2f));
+            rotateYMatrix = glm::rotate(identityMatrix, glm::radians(r), glm::vec3(0.0, 0.0, 0.0));
+            model = translateMatrix * rotateYMatrix * translateMatrix * scaleMatrix;
+            lightingShader.setMat4("model", model);
+            lightingShader.setVec4("color", glm::vec4(0.5, 0.6, 0.5, 1.0));
+            glBindVertexArray(VAO);
             glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
         }
 
@@ -701,12 +731,19 @@ int drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
     translateMatrixBack = glm::translate(identityMatrix, glm::vec3(-3.025, -4.0, -3.02));
     rotateYMatrix = glm::rotate(identityMatrix, glm::radians(r), glm::vec3(0.0, 1.0, 0.0));
     model = translateMatrixBack * rotateYMatrix * translateMatrix2;
-    drawFan(VAO, ourShader, translateMatrix, rotateYMatrix);
+    //drawFan(VAO, ourShader, translateMatrix, rotateYMatrix);
 
     // basket
     drawCylinder(ourShader, VAO, glm::mat4(1.0f), 
             5.2, 0, 2.5,
             .5, 1,        // Radius and height
+            144,
+            120/255.0, 34/255.0, 36/255.0);
+
+    
+    drawCone(ourShader, VAO, glm::mat4(1.0f),
+            5.2, 1.5f, 2.5f,  // Center position
+            1.0f, 1.5f,        // Radius and height
             144,
             120/255.0, 34/255.0, 36/255.0);
     
@@ -716,7 +753,44 @@ int drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
     //             10, 10,             // Segments per ring, number of rings
     //             120/255.0, 34/255.0, 36/255.0);
 
+
+
     return 0;
+}
+
+void drawCone(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans,
+              float centerX, float centerY, float centerZ,
+              float radius, float height, int segments,
+              float r, float g, float b) {
+    
+    // Draw cone using points and trinagles
+    for (int i = 0; i < segments; ++i) {
+        float angle = glm::radians(i * 360.0f / segments);
+        float nextAngle = glm::radians((i + 1) * 360.0f / segments);
+
+        // Calculate position of the segment on the circle
+        float posX = centerX + radius * cos(angle);
+        float posZ = centerZ + radius * sin(angle);
+
+        // Calculate position of the next segment on the circle
+        float nextPosX = centerX + radius * cos(nextAngle);
+        float nextPosZ = centerZ + radius * sin(nextAngle);
+
+        // Cube dimensions
+        float cubeWidth = .02;
+        float cubeHeight = height / segments;
+        float cubeDepth = 0.02;
+
+        // Calculate the rotation of the cube
+        float rotY = glm::degrees(atan2(nextPosZ - posZ, nextPosX - posX));
+
+        drawCube(shaderProgram, VAO, parentTrans,
+                 posX, centerY + i * cubeHeight, posZ,   // Position
+                 0.0f, rotY, 0.0f,     // Rotation
+                 cubeWidth, cubeHeight, cubeDepth, // Scale
+                 r, g, b);             // Color
+    }
+
 }
 
 void drawCylinder(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans,
@@ -1060,6 +1134,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             directionalLightOn = !directionalLightOn;
         }
     }
+    
     if (key == GLFW_KEY_3 && action == GLFW_PRESS)
     {
         if (SpotLightOn)
