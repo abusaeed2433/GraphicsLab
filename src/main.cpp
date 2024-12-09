@@ -12,6 +12,7 @@
 #include "common/Camera.h"
 #include "common/PointLight.h"
 #include "common/sphere.h"
+#include "common/Torus.h"
 
 #include <unordered_map>
 #include <memory>
@@ -99,7 +100,8 @@ float lastFrame = 0.0f;
 
 bool on = false;
 // light settings
-bool pointLightOn = true;
+bool pointLightOnOne = true;
+bool pointLightOnTwo = true;
 bool directionalLightOn = true;
 bool SpotLightOn = true;
 bool AmbientON = true;
@@ -259,7 +261,7 @@ float tanHalfFOV = tan(fov / 2.0f);
 //positions of the point lights
 glm::vec3 pointLightPositions[] = {
     glm::vec3(3.0f,  3.0f,  4.0f),
-    glm::vec3(3.0f,  3.0f,  4.0f),
+    glm::vec3(3.0f,  1.0f,  2.0f),
 };
 
 PointLight pointlight1(
@@ -340,6 +342,7 @@ int main()
    };
 
     Cone cone = Cone();
+    Torus torus = Torus();
 
     unsigned int VBO, VAO, EBO;
     initBinding(VAO, VBO, EBO, ourShader, cube_vertices, sizeof(cube_vertices), cube_indices, sizeof(cube_indices));
@@ -387,26 +390,17 @@ int main()
         lightingShader.setFloat("spotLight.cos_theta", glm::cos(glm::radians(60.0f)));
         lightingShader.setBool("spotLightOn", spotLightOn);
 
-        //handle for changes in directional light directly from shedder
+        
         if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS) {
-            if (directionLightOn) {
-                lightingShader.setBool("ambientLight", !directionalAmbient);
-                directionalAmbient = !directionalAmbient;
-            }
+            ambienton_off(lightingShader);
         }
 
         if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) {
-            if (directionLightOn) {
-                lightingShader.setBool("diffuseLight", !directionalDiffuse);
-                directionalDiffuse = !directionalDiffuse;
-            }
+            diffuse_on_off(lightingShader);
         }
 
-        if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS) {
-            if (directionLightOn) {
-                lightingShader.setBool("specularLight", !directionalSpecular);
-                directionalSpecular = !directionalSpecular;
-            }
+        if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) {
+            specular_on_off(lightingShader);
         }
 
         glm::mat4 projection(0.0f);
@@ -415,21 +409,10 @@ int main()
         projection[2][2] = -(far + near) / (far - near);
         projection[2][3] = -1.0f;
         projection[3][2] = -(2.0f * far * near) / (far - near);
-        //pass projection matrix to shader (note that in this case it could change every frame)
-        //glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        //glm::mat4 projection = glm::ortho(-2.0f, +2.0f, -1.5f, +1.5f, 0.1f, 100.0f);
-        //ourShader.setMat4("projection", projection);
-        //constantShader.setMat4("projection", projection);
+        
         lightingShader.setMat4("projection", projection);
-
-        //camera view transformation
-        //constantShader.setMat4("view", view);
-        //ourShader.setMat4("view", view);
-
         glm::mat4 view;
         
-
-
         //define matrices and vectors needed
         glm::mat4 identityMatrix = glm::mat4(1.0f);
         glm::mat4 translateMatrix, rotateXMatrix, rotateYMatrix, rotateZMatrix, scaleMatrix, model, RotateTranslateMatrix, InvRotateTranslateMatrix;
@@ -457,10 +440,6 @@ int main()
         
         lightingShader.setMat4("view", view);
         ourShader.setMat4("view", view);
-        //constantShader.setMat4("view", view);
-        // glm::mat4 identityMatrix = glm::mat4(1.0f);
-        // glm::mat4 translateMatrix, rotateXMatrix, rotateYMatrix, rotateZMatrix, scaleMatrix, model, modelCentered, translateMatrixprev;
-        // translateMatrix = identityMatrix;
         
         //initialize all elements as non-emissive
         lightingShader.setVec3("material.emissive", glm::vec3(0.0f, 0.0f, 0.0f));
@@ -473,6 +452,14 @@ int main()
         ourShader.setMat4("model", model);
         ourShader.setVec3("color", glm::vec3(0.8f, 0.8f, 0.8f));
         cone.drawCone(lightingShader, model);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(4.2f, 1.9f, 4.5f));
+        model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
+        model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        ourShader.setMat4("model", model);
+        ourShader.setVec3("color", glm::vec3(0.8f, 0.8f, 0.8f));
+        torus.drawTorus(lightingShader, model);
         // drawing above
 
         //light holder 1 with emissive material property
@@ -489,62 +476,22 @@ int main()
 
         lightingShader.setMat4("model", model);
 
-        // glBindVertexArray(VAO);
-        // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
-        // //light holder 2 with emissive material property
-        // translateMatrix = glm::translate(identityMatrix, glm::vec3(2.08f, 3.5f, 8.08f));
-        // scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.04f, -1.5f, 0.04f));
-        // model = translateMatrix * scaleMatrix;
-        // color = glm::vec3(0.0f, 0.0f, 0.5f);
-
-        // lightingShader.setVec3("material.ambient", color);
-        // lightingShader.setVec3("material.diffuse", color);
-        // lightingShader.setVec3("material.specular", color);
-        // lightingShader.setVec3("material.emissive", color);
-        // lightingShader.setFloat("material.shininess", 32.0f);
-
-        // lightingShader.setMat4("model", model);
-
-        // glBindVertexArray(VAO);
-        // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
         // //draw the lamp object(s)
-        // ourShader.use();
-        // ourShader.setMat4("projection", projection);
-        // ourShader.setMat4("view", view);
-
-        // //we now draw as many light bulbs as we have point lights.
-        // glBindVertexArray(lightCubeVAO);
+        ourShader.use();
+        ourShader.setMat4("projection", projection);
+        ourShader.setMat4("view", view);
 
         for (unsigned int i = 0; i < 2; i++)
         {
-            // drawCube(lightingShader, VAO, identityMatrix, 
-            //     pointLightPositions[i].x, pointLightPositions[i].y, pointLightPositions[i].z,
-            //     0,0,0, 
-            //     .2,.2,.2,
-            //     1,1,1,
-            //     100
-            // );
-            // translateMatrix = translate(identityMatrix, pointLightPositions[i]);
-            // scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.2f, 0.2f, 0.2f));
-            // model = translateMatrix * scaleMatrix;
-            // ourShader.setMat4("model", model);
-            // ourShader.setVec4("color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-            // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+            drawCube(ourShader, VAO, identityMatrix, 
+                pointLightPositions[i].x, pointLightPositions[i].y, pointLightPositions[i].z,
+                0,0,0, 
+                .2,.2,.2,
+                1,1,1,
+                100
+            );
 
-            r = 0;
-            translateMatrix = glm::translate(identityMatrix, glm::vec3(2,2,2));//pointLightPositions[i]);//::vec3(-0.2, 0.0, -0.2));
-            scaleMatrix = glm::scale(identityMatrix, glm::vec3(.2f, 0.2f, 0.2f));
-            rotateYMatrix = glm::rotate(identityMatrix, glm::radians(r), glm::vec3(0.0, 0.0, 0.0));
-            model = translateMatrix * rotateYMatrix * translateMatrix * scaleMatrix;
-            lightingShader.setMat4("model", model);
-            lightingShader.setVec4("color", glm::vec4(0.5, 0.6, 0.5, 1.0));
-            glBindVertexArray(VAO);
-            glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
         }
-
-        //glfw swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -741,20 +688,11 @@ int drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
             120/255.0, 34/255.0, 36/255.0);
 
     
-    drawCone(ourShader, VAO, glm::mat4(1.0f),
-            5.2, 1.5f, 2.5f,  // Center position
-            1.0f, 1.5f,        // Radius and height
-            144,
-            120/255.0, 34/255.0, 36/255.0);
-    
     // drawFilledCircle(ourShader, VAO, glm::mat4(1.0f),
     //             5.2, 1.5f, 2.5f,  // Center position
     //             1.0f,              // Radius
     //             10, 10,             // Segments per ring, number of rings
     //             120/255.0, 34/255.0, 36/255.0);
-
-
-
     return 0;
 }
 
@@ -1084,68 +1022,23 @@ void specular_on_off(Shader& lightingShader)
 }
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    //if (key == GLFW_KEY_1 && action == GLFW_PRESS)
-    //{
-    //    if (pointLightOn)
-    //    {
-    //        pointlight1.turnOff();
-    //        pointlight2.turnOff();
-    //        pointlight3.turnOff();
-    //        pointlight4.turnOff();
-    //        pointLightOn = !pointLightOn;
-    //    }
-    //    else
-    //    {
-    //        pointlight1.turnOn();
-    //        pointlight2.turnOn();
-    //        pointlight3.turnOn();
-    //        pointlight4.turnOn();
-    //        pointLightOn = !pointLightOn;
-    //    }
-    //}
+    if (key == GLFW_KEY_1 && action == GLFW_PRESS)
+    {
+        directionalLightOn = !directionalLightOn;
+    }
 
     if (key == GLFW_KEY_2 && action == GLFW_PRESS)
     {
-        if (pointLightOn)
-        {
-            pointlight1.turnOff();
-            pointlight2.turnOff();
-            //pointlight3.turnOff();
-            //pointlight4.turnOff();
-            pointLightOn = !pointLightOn;
-        }
-        else
-        {
-            pointlight1.turnOn();
-            pointlight2.turnOn();
-            //pointlight3.turnOn();
-            //pointlight4.turnOn();
-            pointLightOn = !pointLightOn;
-        }
+        if(pointLightOnOne) pointlight1.turnOff(); else pointlight1.turnOn();
+
+        pointLightOnOne = !pointLightOnOne;
     }
-    if (key == GLFW_KEY_1 && action == GLFW_PRESS)
-    {
-        if (directionalLightOn)
-        {
-            directionalLightOn = !directionalLightOn;
-        }
-        else
-        {
-            directionalLightOn = !directionalLightOn;
-        }
+
+    if(key == GLFW_KEY_3 && action == GLFW_PRESS){
+        if(pointLightOnTwo) pointlight2.turnOff(); else pointlight2.turnOn();
+        pointLightOnTwo = !pointLightOnTwo;
     }
     
-    if (key == GLFW_KEY_3 && action == GLFW_PRESS)
-    {
-        if (SpotLightOn)
-        {
-            SpotLightOn = !SpotLightOn;
-        }
-        else
-        {
-            SpotLightOn = !SpotLightOn;
-        }
-    }
 }
 
 
