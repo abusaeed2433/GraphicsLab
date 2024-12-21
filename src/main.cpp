@@ -35,7 +35,11 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 int drawAll(Shader shaderProgram, glm::mat4 parentTrans);
-int drawRect(float sx, float sy, float sz, float ex, float ey, float ez, Shader shaderProgram, glm::mat4 identityMatrix);
+int drawRectDivider( float sx, float sy, float sz, float ex, float ey, float ez, 
+    float r, float g, float b, float shininess, Shader ourShader, glm::mat4 identityMatrix,
+    int divCountX = 1, int divCountY = 1, int divCountZ = 1);
+int drawRect(float sx, float sy, float sz, float ex, float ey, float ez, float r, float g, float b, float shininess, Shader shaderProgram, glm::mat4 identityMatrix);
+
 
 void ambienton_off(Shader& lightingShader);
 void diffuse_on_off(Shader& lightingShader);
@@ -74,8 +78,8 @@ float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
-float eyeX = 1.35, eyeY = 4.8, eyeZ = 10.0;
-float lookAtX = 4.0, lookAtY = 4.0, lookAtZ = 6.0;
+float eyeX = 500/1000.0f, eyeY = 500/1000.0f, eyeZ = 1500/1000.0f;
+float lookAtX = 500/1000.0f, lookAtY = 500/1000.0f, lookAtZ = 0.0f;
 glm::vec3 V = glm::vec3(0.0f, 1.0f, 0.0f);
 // BasicCamera basic_camera(eyeX, eyeY, eyeZ, lookAtX, lookAtY, lookAtZ, V);
 Camera camera(glm::vec3(eyeX, eyeY, eyeZ));
@@ -83,12 +87,6 @@ Camera camera(glm::vec3(eyeX, eyeY, eyeZ));
 // timing
 float deltaTime = 0.0f;    // time between current frame and last frame
 float lastFrame = 0.0f;
-
-//birds eye
-bool birdEye = false;
-glm::vec3 cameraPos(3.5f, 5.0f, 6.0f);
-glm::vec3 target(3.5f, 0.1f, 3.0f);  
-float birdEyeSpeed = 1.0f;
 
 int initGlfw(GLFWwindow*& window){
     glfwInit();
@@ -299,13 +297,7 @@ int main()
         glm::vec3 color;
 
         glm::mat4 view;
-        if (birdEye) {
-            glm::vec3 up(0.0f, 1.0f, 0.0f);
-            view = glm::lookAt(cameraPos, target, up);
-        }
-        else {
-            view = camera.GetViewMatrix();
-        }
+        view = camera.GetViewMatrix();
 
         lightingShader.setMat4("view", view);
         lightingShader.setVec3("material.emissive", glm::vec3(0.0f, 0.0f, 0.0f));
@@ -327,14 +319,52 @@ int drawAll(Shader ourShader, glm::mat4 identityMatrix){
     // draw rectangle
 
     // My canvas is of 1000 x 1000 x 1000
-    drawRect(100, 100, 0, 900, 900, 100, ourShader, identityMatrix);
+    drawRectDivider(
+        100, 0, 100, 900, 100, 900, 
+        112, 84, 62, 32, 
+        ourShader, identityMatrix,
+        1, 1, 10
+    );
+
+
 }
 
 float lengthX = 1000.0f;
 float lengthY = 1000.0f;
 float lengthZ = 1000.0f;
 
-int drawRect(float sx, float sy, float sz, float ex, float ey, float ez, Shader ourShader, glm::mat4 identityMatrix){
+int drawRectDivider(
+    float sx, float sy, float sz, float ex, float ey, float ez, 
+    float r, float g, float b, 
+    float shininess, Shader ourShader, glm::mat4 identityMatrix,
+    int divCountX, int divCountY, int divCountZ){
+
+    r /= 255.0f;
+    g /= 255.0f;
+    b /= 255.0f;
+
+    float dx = (ex - sx) / divCountX;
+    float dy = (ey - sy) / divCountY;
+    float dz = (ez - sz) / divCountZ;
+
+    for(int i = 0; i < divCountX; i++){
+        for(int j = 0; j < divCountY; j++){
+            for(int k = 0; k < divCountZ; k++){
+                drawRect(
+                    sx + i*dx, sy + j*dy, sz + k*dz, 
+                    sx + (i+1)*dx, sy + (j+1)*dy, sz + (k+1)*dz, 
+                    r, g, b,
+                    shininess, ourShader, identityMatrix);
+            }
+        }
+    }
+
+    return 1;
+}
+
+int drawRect(
+    float sx, float sy, float sz, float ex, float ey, float ez, 
+    float r, float g, float b, float shininess, Shader ourShader, glm::mat4 identityMatrix){
     // top left point (sx,sy,sz)
     // bottom right point (ex,ey,ez)
     // color properties
@@ -356,6 +386,13 @@ int drawRect(float sx, float sy, float sz, float ex, float ey, float ez, Shader 
         /* Front */ 0, 1, 2, 2, 3, 0, /* Back */ 4, 5, 6, 6, 7, 4, /*  Left  */ 0, 4, 7, 7, 3, 0,
         /* Right */ 1, 5, 6, 6, 2, 1, /* Top  */ 3, 7, 6, 6, 2, 3, /* Bottom */ 0, 1, 5, 5, 4, 0
     };
+
+    ourShader.use();
+    ourShader.use();
+    ourShader.setVec3("material.ambient", glm::vec3(r, g, b));
+    ourShader.setVec3("material.diffuse", glm::vec3(r, g, b));
+    ourShader.setVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+    ourShader.setFloat("material.shininess", shininess);
 
     // Generate and bind VAO
     GLuint VAO, VBO, EBO;
@@ -380,10 +417,11 @@ int drawRect(float sx, float sy, float sz, float ex, float ey, float ez, Shader 
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
 
-    ourShader.use();
+    
 
     glm::mat4 model = glm::mat4(1.0f);
     ourShader.setMat4("model", identityMatrix);
+    ourShader.setVec4("shapeColor", glm::vec4(1.0, 1.0, 1.0, 1.0));
 
     // Draw the cube
     glBindVertexArray(VAO);
