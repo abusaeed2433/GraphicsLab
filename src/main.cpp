@@ -382,11 +382,11 @@ int drawAll(Shader ourShader, glm::mat4 identityMatrix){
         // );
 
         // stairs-1
-        drawRectDivider( /*start pos*/ 550,20,850, /*end pos*/ 650, 20+BASE_HEIGHT-10.0f, 870, /*color*/ 105,105,105, /*shine*/ 15, 
+        drawRectDivider( /*start pos*/ 500,20,850, /*end pos*/ 650, 20+BASE_HEIGHT-10.0f, 870, /*color*/ 105,105,105, /*shine*/ 15, 
             ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
         );
         // stairs-2
-        drawRectDivider( /*start pos*/ 550,20,870, /*end pos*/ 650, 20+BASE_HEIGHT/2-5.0f, 890, /*color*/ 105,105,105, /*shine*/ 15, 
+        drawRectDivider( /*start pos*/ 500,20,870, /*end pos*/ 650, 20+BASE_HEIGHT/2-5.0f, 890, /*color*/ 105,105,105, /*shine*/ 15, 
             ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
         );
 
@@ -399,10 +399,61 @@ int drawAll(Shader ourShader, glm::mat4 identityMatrix){
             ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
         );
 
-        // ceiling of second store
-        drawRectDivider( /*start pos*/ 100,20+BASE_HEIGHT+2*FLOOR_HEIGHT,100, /*end pos*/ 900, 20+BASE_HEIGHT+2*FLOOR_HEIGHT+20, 850, /*color*/ 60, 50, 40, /*shine*/ 5, 
-            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-        );
+        // // ceiling of second store
+        // drawRectDivider( /*start pos*/ 100,20+BASE_HEIGHT+2*FLOOR_HEIGHT,100, /*end pos*/ 900, 20+BASE_HEIGHT+2*FLOOR_HEIGHT+20, 850, /*color*/ 60, 50, 40, /*shine*/ 5, 
+        //     ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+        // );
+    }
+
+    // Piller
+    if(1){
+        float pillerWidthX = 10.0f;
+        float pillerWidthZ = 15.0f;
+        float xPositions[] = {100,300,500-pillerWidthX,650,800};
+        float minY = 20+BASE_HEIGHT;
+        float maxY = minY+FLOOR_HEIGHT;
+
+        float maxZ = 850;
+        float minZ = maxZ - pillerWidthZ;
+
+        // front pillers
+        for(auto x: xPositions){
+            drawRectDivider( /*start pos*/ x,minY,minZ, /*end pos*/ x+pillerWidthX, maxY, maxZ, /*color*/ 80, 70, 60, /*shine*/ 12, 
+                ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+            );
+        }
+
+        // back pillers
+        minZ = 100;
+        maxZ = minZ+pillerWidthZ;
+        for(auto x: xPositions){
+            drawRectDivider( /*start pos*/ x,minY,minZ, /*end pos*/ x+pillerWidthX, maxY, maxZ, /*color*/ 80, 70, 60, /*shine*/ 12, 
+                ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+            );
+        }
+
+        // left & right pillers
+        float x = 100;
+        float step = 150;
+        float z = 100;
+        while(z <= 900){
+            if(z == 900){
+                z -= pillerWidthZ;
+            }
+            
+            drawRectDivider( /*start pos*/ x,minY,z, /*end pos*/ x+pillerWidthX, maxY, z+pillerWidthZ, /*color*/ 80, 70, 60, /*shine*/ 12, 
+                ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+            );
+
+            x = 900 - pillerWidthX;
+            drawRectDivider( /*start pos*/ x,minY,z, /*end pos*/ x+pillerWidthX, maxY, z+pillerWidthZ, /*color*/ 80, 70, 60, /*shine*/ 12, 
+                ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+            );
+
+            x = 100;
+            z += step;
+        }
+
     }
 
 
