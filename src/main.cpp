@@ -319,12 +319,50 @@ int drawAll(Shader ourShader, glm::mat4 identityMatrix){
     // draw rectangle
 
     // My canvas is of 1000 x 1000 x 1000
+    
+    // Ground
     drawRectDivider(
-        100, 0, 100, 900, 100, 900, 
+        0, 0, 0,
+        1000, 20, 1000,
+
         112, 84, 62, 32, 
         ourShader, identityMatrix,
         1, 1, 10
     );
+
+    // All walls
+    // right wall
+    drawRectDivider( /*start pos*/ 980, 20, 0, /*end pos*/ 1000, 200, 980, /*color*/ 139, 79, 57, /*shine*/ 32, 
+        ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
+    );
+    // left wall
+    drawRectDivider( /*start pos*/ 0, 20, 0, /*end pos*/ 20, 200, 980, /*color*/ 139, 79, 57, /*shine*/ 32, 
+        ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
+    );
+
+    // back wall
+    drawRectDivider( /*start pos*/ 20, 20, 0, /*end pos*/ 980, 200, 20, /*color*/ 139, 79, 57, /*shine*/ 32, 
+        ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
+    );
+
+    // front wall - left half
+    drawRectDivider( /*start pos*/ 0, 20, 980, /*end pos*/ 400, 200, 1000, /*color*/ 139, 79, 57, /*shine*/ 32, 
+        ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
+    );
+    // left side piller
+    drawRectDivider( /*start pos*/ 400, 20, 1000, /*end pos*/ 420, 200, 1000, /*color*/ 143, 127, 132, /*shine*/ 32, 
+        ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+    );
+    // right side piller
+    drawRectDivider( /*start pos*/ 580, 20, 1000, /*end pos*/ 600, 200, 1000, /*color*/ 143, 127, 132, /*shine*/ 32, 
+        ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+    );
+    // front wall - right half
+    drawRectDivider( /*start pos*/ 600, 20, 980, /*end pos*/ 1000, 200, 1000, /*color*/ 139, 79, 57, /*shine*/ 32, 
+        ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
+    );
+
+
 
 
 }
