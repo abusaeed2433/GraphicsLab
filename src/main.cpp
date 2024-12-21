@@ -28,29 +28,18 @@ using namespace std;
 
 //#define PI 3.14159265359
 
-
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-void drawFan(unsigned int VAO, Shader ourShader, glm::mat4 translateMatrix, glm::mat4 sm);
 
-int drawAll(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans);
-void drawCylinder(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans,
-    float centerX, float centerY, float centerZ,
-    float radius, float height, int segments,
-    float r, float g, float b);
+int drawAll(Shader shaderProgram, glm::mat4 parentTrans);
+int drawRect(float sx, float sy, float sz, float ex, float ey, float ez, Shader shaderProgram, glm::mat4 identityMatrix);
 
-void drawCone(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans,
-              float centerX, float centerY, float centerZ,
-              float radius, float height, int segments,
-              float r, float g, float b);
-
-void drawFilledCircle(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans,
-    float centerX, float centerY, float centerZ,
-    float radius, int segmentsPerRing, int rings,
-    float r, float g, float b);
+void ambienton_off(Shader& lightingShader);
+void diffuse_on_off(Shader& lightingShader);
+void specular_on_off(Shader& lightingShader);
 
 void drawCube(
     Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans, 
@@ -58,10 +47,6 @@ void drawCube(
     float rotX = 0.0, float rotY = 0.0, float rotZ = 0.0,
     float scX = 1.0, float scY = 1.0, float scZ=1.0,
     float r = 0.0, float g = 0.0, float b = 0.0, float shininess = 32.0);
-
-void ambienton_off(Shader& lightingShader);
-void diffuse_on_off(Shader& lightingShader);
-void specular_on_off(Shader& lightingShader);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -98,17 +83,6 @@ Camera camera(glm::vec3(eyeX, eyeY, eyeZ));
 // timing
 float deltaTime = 0.0f;    // time between current frame and last frame
 float lastFrame = 0.0f;
-
-bool on = false;
-// light settings
-bool pointLightOnOne = true;
-bool pointLightOnTwo = true;
-bool AmbientON = true;
-bool DiffusionON = true;
-bool SpecularON = true;
-bool ambientToggle = true;
-bool diffuseToggle = true;
-bool specularToggle = true;
 
 //birds eye
 bool birdEye = false;
@@ -171,11 +145,21 @@ void initBinding(unsigned int &VAO, unsigned int &VBO, unsigned int &EBO, Shader
     ourShader.use();
 }
 
+// lights var
 //directional light
 bool directionLightOn = true;
 bool directionalAmbient = true;
 bool directionalDiffuse = true;
 bool directionalSpecular = true;
+
+bool pointLightOnOne = true;
+bool pointLightOnTwo = true;
+bool AmbientON = true;
+bool DiffusionON = true;
+bool SpecularON = true;
+bool ambientToggle = true;
+bool diffuseToggle = true;
+bool specularToggle = true;
 
 //spot light
 bool spotLightOn = true;
@@ -217,6 +201,7 @@ PointLight pointlight2(
     0.032f,
     2
 );
+// lights var above
 
 
 int main()
@@ -231,60 +216,11 @@ int main()
         "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\project\\src\\FragmentShader.fs"
     );
 
-    Shader constantShader(
-        "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\project\\src\\VertexShader.vs", 
-        "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\project\\src\\FragmentShaderV2.fs"
-    );
-
     Shader lightingShader(
         "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\project\\src\\vertexShaderForGouraudShading.vs", 
         "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\project\\src\\fragmentShaderForGouraudShading.fs"
     );
 
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
-    float cube_vertices[] = {
-        0.0f, 0.0f, 0.0f, 0.3f, 0.8f, 0.5f,
-        1.0f, 0.0f, 0.0f, 0.5f, 0.4f, 0.3f,
-        1.0f, 1.0f, 0.0f, 0.2f, 0.7f, 0.3f,
-        0.0f, 1.0f, 0.0f, 0.6f, 0.2f, 0.8f,
-        0.0f, 0.0f, 1.0f, 0.8f, 0.3f, 0.6f,
-        1.0f, 0.0f, 1.0f, 0.4f, 0.4f, 0.8f,
-        1.0f, 1.0f, 1.0f, 0.2f, 0.3f, 0.6f,
-        0.0f, 1.0f, 1.0f, 0.7f, 0.5f, 0.4f
-    };
-    unsigned int cube_indices[] = {
-       0, 3, 2,
-       2, 1, 0,
-
-       1, 2, 6,
-       6, 5, 1,
-
-       5, 6, 7,
-       7 ,4, 5,
-
-       4, 7, 3,
-       3, 0, 4,
-
-       6, 2, 3,
-       3, 7, 6,
-
-       1, 5, 4,
-       4, 0, 1
-   };
-
-    Cone cone = Cone();
-    Torus torus = Torus();
-
-    unsigned int VBO, VAO, EBO;
-    initBinding(VAO, VBO, EBO, ourShader, cube_vertices, sizeof(cube_vertices), cube_indices, sizeof(cube_indices));
-
-    //second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
-    unsigned int lightCubeVAO;
-    glGenVertexArrays(1, &lightCubeVAO);
-    glBindVertexArray(lightCubeVAO);
-
-    float r = 0.0f;
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = static_cast<float>(glfwGetTime());
@@ -295,7 +231,8 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        //lighting
+         
+        { //lighting below
         lightingShader.use();
         lightingShader.setVec3("viewPos", camera.Position);
 
@@ -322,7 +259,6 @@ int main()
         lightingShader.setFloat("spotLight.cos_theta", glm::cos(glm::radians(60.0f)));
         lightingShader.setBool("spotLightOn", spotLightOn);
 
-        
         if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS) {
             ambienton_off(lightingShader);
         }
@@ -355,17 +291,14 @@ int main()
         glm::vec3 color;
         
         //initialize all elements as non-emissive
-        lightingShader.setVec3("material.emissive", glm::vec3(0.0f, 0.0f, 0.0f));
-        //lighting above
+        lightingShader.setVec3("material.emissive", glm::vec3(0.0f, 0.0f, 0.0f)); }
 
+        //define matrices and vectors needed
+        glm::mat4 identityMatrix = glm::mat4(1.0f);
+        glm::mat4 translateMatrix, rotateXMatrix, rotateYMatrix, rotateZMatrix, scaleMatrix, model, RotateTranslateMatrix, InvRotateTranslateMatrix;
+        glm::vec3 color;
 
-        // glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        ourShader.setMat4("projection", projection);
-        constantShader.setMat4("projection", projection);
-
-        // camera/view transformation
-        //glm::mat4 view;
-
+        glm::mat4 view;
         if (birdEye) {
             glm::vec3 up(0.0f, 1.0f, 0.0f);
             view = glm::lookAt(cameraPos, target, up);
@@ -373,423 +306,103 @@ int main()
         else {
             view = camera.GetViewMatrix();
         }
-        
+
         lightingShader.setMat4("view", view);
-        ourShader.setMat4("view", view);
-        
-        //initialize all elements as non-emissive
         lightingShader.setVec3("material.emissive", glm::vec3(0.0f, 0.0f, 0.0f));
-    
-        // drawing
-        drawAll(lightingShader, VAO, identityMatrix);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(3.5f, 1.6f, 4.5f));
-        model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
-        ourShader.setMat4("model", model);
-        ourShader.setVec3("color", glm::vec3(0.8f, 0.8f, 0.8f));
-        cone.drawCone(lightingShader, model);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(4.2f, 1.9f, 4.5f));
-        model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
-        model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        ourShader.setMat4("model", model);
-        ourShader.setVec3("color", glm::vec3(0.8f, 0.8f, 0.8f));
-        torus.drawTorus(lightingShader, model);
-        // drawing above
-
-        //light holder 1 with emissive material property
-        translateMatrix = glm::translate(identityMatrix, glm::vec3(2.08f, 3.5f, 2.08f));
-        scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.04f, -1.5f, 0.04f));
-        model = translateMatrix * scaleMatrix;
-        color = glm::vec3(0.5f, 0.0f, 0.0f);
-
-        lightingShader.setVec3("material.ambient", color);
-        lightingShader.setVec3("material.diffuse", color);
-        lightingShader.setVec3("material.specular", color);
-        lightingShader.setVec3("material.emissive", color);
-        lightingShader.setFloat("material.shininess", 32.0f);
-
-        lightingShader.setMat4("model", model);
-
-        // //draw the lamp object(s)
-        ourShader.use();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
-
-        for (unsigned int i = 0; i < 2; i++)
-        {
-            drawCube(ourShader, VAO, identityMatrix, 
-                pointLightPositions[i].x, pointLightPositions[i].y, pointLightPositions[i].z,
-                0,0,0, 
-                .2,.2,.2,
-                1,1,1,
-                100
-            );
-
-        }
         
+        ourShader.setMat4("view", view);
+        glm::mat4 projection = glm::perspective(glm::radians(90.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+        ourShader.setMat4("projection", projection);
+    
+        drawAll(lightingShader, identityMatrix);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    safeTerminate(VAO, VBO, EBO);
     return 0;
 }
 
-float r = 0.0f;
+int drawAll(Shader ourShader, glm::mat4 identityMatrix){
+    // draw rectangle
 
-int drawAll(Shader ourShader, unsigned int VAO, glm::mat4 identityMatrix){
-    // floor
-    drawCube(ourShader, VAO, identityMatrix, 0,0,0, 0,0,0, 6,.1,6, 0.65, 0.70, 0.73, 32.0);
+    // My canvas is of 1000 x 1000 x 1000
+    drawRect(100, 100, 0, 900, 900, 100, ourShader, identityMatrix);
+}
 
-    // ceiling
-    drawCube(ourShader, VAO, identityMatrix, 0,5,0, 0,0,0, 6,.1,6, 0.8, 0.80, 0.80,32.0);
+float lengthX = 1000.0f;
+float lengthY = 1000.0f;
+float lengthZ = 1000.0f;
+
+int drawRect(float sx, float sy, float sz, float ex, float ey, float ez, Shader ourShader, glm::mat4 identityMatrix){
+    // top left point (sx,sy,sz)
+    // bottom right point (ex,ey,ez)
+    // color properties
     
-    // right wall
-    drawCube(ourShader, VAO, identityMatrix, 0,.1, -.05, 0,0,0,  6,5,.1, 128/255.0, 128/255.0, 128/255.0,32.0);
-    // left wall
-    drawCube(ourShader, VAO, identityMatrix, -0.05,.1, 0, 0,0,0,  .1,5,6, 255/255.0, 200/255.0, 220/255.,32.00);
+    GLfloat vertices[] = {
+        // Positions           // Colors
+        sx/lengthX, sy/lengthY, sz/lengthZ,  1.0f, 0.0f, 0.0f, // Bottom-left
+        ex/lengthX, sy/lengthY, sz/lengthZ,  0.0f, 1.0f, 0.0f, // Bottom-right
+        ex/lengthX, ey/lengthY, sz/lengthZ,  0.0f, 0.0f, 1.0f, // Top-right
+        sx/lengthX, ey/lengthY, sz/lengthZ,  1.0f, 1.0f, 0.0f,  // Top-left
 
-    // right shelf
-    drawCube(ourShader, VAO, identityMatrix, 0.1, 1.5, .1, 0,0,0, 4, .1, 1.2, 227/255.0, 193/255.0, 166/255.,32.00);
-    // left shelf
-    drawCube(ourShader, VAO, identityMatrix, 0.1, 1.5, .1, 0,0,0, 1.2, .1, 5.9, 227/255.0, 193/255.0, 166/255.,32.00);
-    
-    // left wall shelf
-    int total = 4;
-    for(int i=0; i<total; i++){
-        float gap = (1 / 10.0);
-        float width = .8;
+        sx/lengthX, sy/lengthY, ez/lengthZ,  1.0f, 0.0f, 0.0f, // Bottom-left
+        ex/lengthX, sy/lengthY, ez/lengthZ,  0.0f, 1.0f, 0.0f, // Bottom-right
+        ex/lengthX, ey/lengthY, ez/lengthZ,  0.0f, 0.0f, 1.0f, // Top-right
+        sx/lengthX, ey/lengthY, ez/lengthZ,  1.0f, 1.0f, 0.0f  // Top-left        
+    };
 
-        drawCube( ourShader, VAO, identityMatrix, 0, 2.5, (i * width + i*gap), 
-            0,0,0, .6,1, width, 241/255.0, 112/255.0, 4/255.0,32.0
-        );
-        
-        if(i == total-1) continue;
-        drawCube( ourShader, VAO, identityMatrix, 0, 2.5, (i * width + i*gap) + width,
-            0,0,0, .6,1,gap, 162/255.0, 52/255.0, 0/255.0, 32
-        );
-    }
-    // right wall shelf
-    drawCube( ourShader, VAO, identityMatrix, .65, 2.5,0, 0,0,0, .8,1,.6,  241/255.0, 112/255.0, 4/255.0,32.0 );
-    // right wall shelf white
-    drawCube( ourShader, VAO, identityMatrix, .65, 2.55,.6, 0,0,0, .7,.9,.05,  212/255.0, 164/255.0, 141/255.0,32.0 );
-    
-    // right wall window?
-    drawCube( ourShader, VAO, identityMatrix, 2, 2, .1, 0,0,0, 2,1.5,.1,  241/255.0, 112/255.0, 4/255.0,32.0 );
-    // right wall window? white
-    drawCube( ourShader, VAO, identityMatrix, 2.05, 2.05, .15, 0,0,0, .9,1.4, .1,  212/255.0, 164/255.0, 141/255.0,32.0 );
-    drawCube( ourShader, VAO, identityMatrix, 3.05, 2.05, .15, 0,0,0, .9,1.4, .1,  212/255.0, 164/255.0, 141/255.0,32.0 );
+    GLuint indices[] = { 
+        /* Front */ 0, 1, 2, 2, 3, 0, /* Back */ 4, 5, 6, 6, 7, 4, /*  Left  */ 0, 4, 7, 7, 3, 0,
+        /* Right */ 1, 5, 6, 6, 2, 1, /* Top  */ 3, 7, 6, 6, 2, 3, /* Bottom */ 0, 1, 5, 5, 4, 0
+    };
 
-    // lower shelf left
-    total = 6;
-    for(int i=0; i<total; i++){
-        float gap = (1 / 10.0);
-        float width = .8;
+    // Generate and bind VAO
+    GLuint VAO, VBO, EBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
-        drawCube( ourShader, VAO, identityMatrix, 0, 0, .5+(i * width + i*gap), 
-            0,0,0, 1.2,1.5, width, 241/255.0, 112/255.0, 4/255.0,32.0
-        );
-        
-        if(i == total-1) continue;
-        drawCube( ourShader, VAO, identityMatrix, 0, 0, .5+(i * width + i*gap) + width,
-            0,0,0, 1.2,1.5,gap, 162/255.0, 52/255.0, 0/255.0,32.0
-        );
-    }
+    glBindVertexArray(VAO);
 
-    // right wall shelf bottom
-    total = 4;
-    for(int i=0; i<total; i++){
-        float gap = (1 / 10.0);
-        float width = .6;
-        
-        drawCube( ourShader, VAO, identityMatrix,  1.2 + (i*width + i*gap), 0, 0, 
-            0,0,0, width, 1.5, 1.2,  240/255.0, 108/255.0, 36/255.0,32.0
-        );
-        
-        if(i == total-1) continue;
-        drawCube( ourShader, VAO, identityMatrix,  1.2 + (i*width + i*gap + width), 0, 0, 
-            0,0,0, gap, 1.5, 1.2, 162/255.0, 52/255.0, 0/255.0,32.0
-        );
-    }
+    // Vertex buffer object (VBO)
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // fridge
-    drawCube( ourShader, VAO, identityMatrix,  4,0,0, 0,0,0, 2, 3.5, 1.5,  178/255.0, 157/255.0, 136/255.0,32.0);
-    drawCube( ourShader, VAO, identityMatrix, 4.05,0,1.5, 0,0,0, .95,3.5, .05,  163/255.0, 143/255.0, 88/255.0 ,32.0);
-    drawCube( ourShader, VAO, identityMatrix, 5.05,0,1.5, 0,0,0, .95,3.5, .05,  163/255.0, 143/255.0, 88/255.0 ,32.0);
-    // fridge handle
-    drawCube( ourShader, VAO, identityMatrix, 4.9,1.5,1.55, 0,0,0, .05,1.1, .05,  20/255.0, 20/255.0, 20/255.0 ,32.0);
-    drawCube( ourShader, VAO, identityMatrix, 5.1,1.5,1.55, 0,0,0, .05,1.1, .05,  20/255.0, 20/255.0, 20/255.0 ,32.0);
+    // Element buffer object (EBO)
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    // table-top
-    drawCube( ourShader, VAO, identityMatrix, 3, 1.5, 4, 0,0,0, 2, .1, 1.5,  25/255.0, 21/255.0, 18/255.0 ,32.0);
-    // left top leg
-    drawCube( ourShader, VAO, identityMatrix, 3, 0, 4, 0,0,0, .1, 1.5, .1,  255/255.0, 21/255.0, 18/255.0 ,32.0);
-    // right top leg
-    drawCube( ourShader, VAO, identityMatrix, 4.9, 0, 4, 0,0,0, .1, 1.5, .1,  255/255.0, 21/255.0, 18/255.0 ,32.0);
-    // left bottom leg
-    drawCube( ourShader, VAO, identityMatrix, 3, 0, 5.4, 0,0,0, .1, 1.5, .1,  255/255.0, 21/255.0, 18/255.0 ,32.0);
-    // right bottom leg
-    drawCube( ourShader, VAO, identityMatrix, 4.9, 0, 5.4, 0,0,0, .1, 1.5, .1,  255/255.0, 21/255.0, 18/255.0 ,32.0);
+    // Vertex attributes (position and color)
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)0);
+    glEnableVertexAttribArray(0);
 
-    for(int z=0; z<2; z++){
-        for(int x=0; x<2; x++){
-            float width = 0.5;
-            float gap = 0.4;
-            int zz = (z == 0) ? 1 : 0;
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
 
-            // chairs
-            drawCube( ourShader, VAO, identityMatrix, (width+gap)*x+3.2,.8,(z*2+3), 0,0,0, .5, .1, .5,  75/255.0, 62/255.0, 53/255.0 ,32.0);
-            // left top leg
-            drawCube( ourShader, VAO, identityMatrix, (width+gap)*x+3.2,0,(z*2+3), 0,0,0, .1, (.8 + zz*.7), .1,  75/255.0, 62/255.0, 53/255.0 ,32.0);
+    ourShader.use();
 
-            
-            // left left leg
-            drawCube( ourShader, VAO, identityMatrix, (width+gap)*x+3.33,0.9,(z*2+3+.5*z - z*.1), 0,0,0, .05, .6, .1,  75/255.0, 62/255.0, 53/255.0 ,32.0);
-            // left mid leg
-            drawCube( ourShader, VAO, identityMatrix, (width+gap)*x+3.44,0.9,(z*2+3+.5*z - z*.1), 0,0,0, .05, .6, .1,  75/255.0, 62/255.0, 53/255.0 ,32.0);
-            // left right leg
-            drawCube( ourShader, VAO, identityMatrix, (width+gap)*x+3.55,0.9,(z*2+3+.5*z - z*.1), 0,0,0, .05, .6, .1,  75/255.0, 62/255.0, 53/255.0 ,32.0);
+    glm::mat4 model = glm::mat4(1.0f);
+    ourShader.setMat4("model", identityMatrix);
 
-
-            // right top leg
-            drawCube( ourShader, VAO, identityMatrix, (width+gap)*x+3.6,0,(z*2+3), 0,0,0, .1, (.8+.7*zz), .1,  75/255.0, 62/255.0, 53/255.0 ,32.0);
-
-            zz = !zz;
-            // left bottom leg
-            drawCube( ourShader, VAO, identityMatrix, (width+gap)*x+3.2,0,(z*2+3.4), 0,0,0, .1, (.8+.7*zz), .1,  75/255.0, 62/255.0, 53/255.0 ,32.0);
-            // right bottom leg
-            drawCube( ourShader, VAO, identityMatrix, (width+gap)*x+3.6,0,(z*2+3.4), 0,0,0, .1, (.8+.7*zz), .1,  75/255.0, 62/255.0, 53/255.0 ,32.0);
-        }
-    }
-
-    // tap
-    drawCube( ourShader, VAO, identityMatrix,  2,1.6,.1, 0,0,0, 1.5,.02,1.3,  24/255.0, 21/255.0, 22/255.0,32.0);
-    total = 20;
-    float unit = (1.3 / (2*total));
-    for(int z=0; z<total; z++){
-        drawCube( ourShader, VAO, identityMatrix,  2,1.63, (z+1)*2*unit, 0,0,0, 1,.01,unit/2,  60/255.0, 60/255.0, 60/255.0,32.0);
-    }
-    // the real tap
-    drawCube( ourShader, VAO, identityMatrix,  3.2,1.6,.3, 0,0,0, .05,.5,.05,  200/255.0, 200/255.0, 200/255.0,32.0);
-    drawCube( ourShader, VAO, identityMatrix,  3.2,2.1,.3, 0,0,0, .05,.05,.3,  200/255.0, 200/255.0, 200/255.0,32.0);
-    drawCube( ourShader, VAO, identityMatrix,  3.2,2.0,.6, 0,0,0, .05,.2,.05,  200/255.0, 200/255.0, 200/255.0,32.0);
-
-    // microwave
-    drawCube(ourShader, VAO, identityMatrix, 0.1, 1.6, 4, 0,0,0, .8, .5, 1.2, 154/255.0, 134/255.0, 108/255.0,32.0);
-    drawCube(ourShader, VAO, identityMatrix, 0.9, 1.6, 4.35, 0,0,0, .01, .5, .8, 20/255.0, 20/255.0, 20/255.0,32.0);
-
-    total = 15;
-    unit = (.5 / (2*total));
-    for(int z=0; z<total; z++){
-        drawCube(ourShader, VAO, identityMatrix, 0.9, 1.6+(z+1)*2*unit, 4.05, 0,0,0, .01, unit/4, .3, 255/255.0, 255/255.0, 255/255.0,32.0);
-    }
-
-    // fan, 6, 5, 6
-    //on = true;
-    if (on){
-        r += 1;
-    }
-    else
-    {
-        r = 0.0f;
-    }
-
-    glm::mat4 translateMatrix, scaleMatrix, model, translateMatrixprev, rotateYMatrix;
-    //fan stick
-    translateMatrix = glm::translate(identityMatrix, glm::vec3(3.0, 4.0, 3.0));
-    scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.1f, 0.9f, 0.1));
-    model = translateMatrix * scaleMatrix;
-    ourShader.setMat4("model", model);
-    ourShader.setVec4("color", glm::vec4(0.0, 0.0, 0.0, 1.0));
+    // Draw the cube
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-    // fan rotation
-    translateMatrixprev = translateMatrix;
-    glm::mat4 translateMatrix2, translateMatrixBack, test;
+    // Cleanup
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
-    translateMatrix2 = glm::translate(identityMatrix, glm::vec3(3.025, 4.0, 3.025));
-    translateMatrixBack = glm::translate(identityMatrix, glm::vec3(-3.025, -4.0, -3.02));
-    rotateYMatrix = glm::rotate(identityMatrix, glm::radians(r), glm::vec3(0.0, 1.0, 0.0));
-    model = translateMatrixBack * rotateYMatrix * translateMatrix2;
-    //drawFan(VAO, ourShader, translateMatrix, rotateYMatrix);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+    glDeleteVertexArrays(1, &VAO);
 
-    // basket
-    drawCylinder(ourShader, VAO, glm::mat4(1.0f), 
-            5.2, 0, 2.5,
-            .5, 1,        // Radius and height
-            144,
-            120/255.0, 34/255.0, 36/255.0);
-
-    
-    // drawFilledCircle(ourShader, VAO, glm::mat4(1.0f),
-    //             5.2, 1.5f, 2.5f,  // Center position
-    //             1.0f,              // Radius
-    //             10, 10,             // Segments per ring, number of rings
-    //             120/255.0, 34/255.0, 36/255.0);
     return 0;
 }
 
-void drawCone(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans,
-              float centerX, float centerY, float centerZ,
-              float radius, float height, int segments,
-              float r, float g, float b) {
-    
-    // Draw cone using points and trinagles
-    for (int i = 0; i < segments; ++i) {
-        float angle = glm::radians(i * 360.0f / segments);
-        float nextAngle = glm::radians((i + 1) * 360.0f / segments);
-
-        // Calculate position of the segment on the circle
-        float posX = centerX + radius * cos(angle);
-        float posZ = centerZ + radius * sin(angle);
-
-        // Calculate position of the next segment on the circle
-        float nextPosX = centerX + radius * cos(nextAngle);
-        float nextPosZ = centerZ + radius * sin(nextAngle);
-
-        // Cube dimensions
-        float cubeWidth = .02;
-        float cubeHeight = height / segments;
-        float cubeDepth = 0.02;
-
-        // Calculate the rotation of the cube
-        float rotY = glm::degrees(atan2(nextPosZ - posZ, nextPosX - posX));
-
-        drawCube(shaderProgram, VAO, parentTrans,
-                 posX, centerY + i * cubeHeight, posZ,   // Position
-                 0.0f, rotY, 0.0f,     // Rotation
-                 cubeWidth, cubeHeight, cubeDepth, // Scale
-                 r, g, b);             // Color
-    }
-
-}
-
-void drawCylinder(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans,
-                  float centerX, float centerY, float centerZ,
-                  float radius, float height, int segments,
-                  float r, float g, float b) {
-    // Angle step for each segment
-    float angleStep = 360.0f / segments;
-
-    for (int i = 0; i < segments; ++i) {
-        float angle = glm::radians(i * angleStep);
-        float nextAngle = glm::radians((i + 1) * angleStep);
-
-        // Calculate position of the segment on the circle
-        float posX = centerX + radius * cos(angle);
-        float posZ = centerZ + radius * sin(angle);
-
-        // Cube dimensions
-        float cubeWidth = .02;
-        float cubeHeight = height;
-        float cubeDepth = 0.02;
-
-        float rotY = glm::degrees(atan2(sin(angle), cos(angle)));
-
-        drawCube(shaderProgram, VAO, parentTrans,
-                 posX, centerY, posZ,   // Position
-                 0.0f, rotY, 0.0f,     // Rotation
-                 cubeWidth, cubeHeight, cubeDepth, // Scale
-                 r, g, b);             // Color
-    }
-}
-
-void drawFilledCircle(Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans,
-                      float centerX, float centerY, float centerZ,
-                      float radius, int segmentsPerRing, int rings,
-                      float r, float g, float b) {
-    for (int ring = 0; ring <= rings; ++ring) {
-        // Calculate the radius of the current ring
-        float ringRadius = (float)ring / rings * radius;
-
-        // Calculate the number of cubes in the ring
-        int segmentCount = segmentsPerRing * (ring + 1);
-
-        for (int i = 0; i < segmentCount; ++i) {
-            // Calculate the angle for the current segment
-            float angle = glm::radians(360.0f / segmentCount * i);
-
-            // Position the cube on the current ring
-            float posX = centerX + ringRadius * cos(angle);
-            float posZ = centerZ + ringRadius * sin(angle);
-
-            // Scale the cubes to be small for smoother approximation
-            float cubeSize = radius / (segmentsPerRing * rings);
-
-            // Draw the cube at the calculated position
-            drawCube(shaderProgram, VAO, parentTrans,
-                     posX, centerY, posZ,  // Position
-                     0.0f, 0.0f, 0.0f,    // Rotation
-                     cubeSize, cubeSize, cubeSize, // Scale
-                     r, g, b);            // Color
-        }
-    }
-}
-
-
-void drawFan(unsigned int VAO, Shader ourShader, glm::mat4 translateMatrix, glm::mat4 sm)
-{
-    glm::mat4 identityMatrix = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-    glm::mat4 rotateXMatrix, rotateYMatrix, rotateZMatrix, scaleMatrix, model, modelCentered, translateMatrixprev;
-    glm::mat4 middleTranslate, leftBladeTranslate, frontBladeTranslate, rightBladeTranslate, backBladeTranslate;
-    //fan middle part
-    //translateMatrix = translateMatrix * glm::translate(identityMatrix, glm::vec3(-0.2, -1.5, -0.2));
-    middleTranslate = glm::translate(identityMatrix, glm::vec3(-0.2, 0.0, -0.2));
-    scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.5f, -0.1f, 0.5));
-    model = translateMatrix * sm * middleTranslate * scaleMatrix;
-    ourShader.setMat4("model", model);
-    ourShader.setVec4("shapeColor", glm::vec4(1.0, 1.0, 1.0, 1.0));
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
-    translateMatrixprev = translateMatrix;
-    //left fan
-    //translateMatrix = translateMatrix * glm::translate(identityMatrix, glm::vec3(0.0, -0.075, 0.0));
-    leftBladeTranslate = glm::translate(identityMatrix, glm::vec3(-0.2, 0.0, -0.2));
-    scaleMatrix = glm::scale(identityMatrix, glm::vec3(-2.0f, -0.1f, 0.5));
-    model = translateMatrix * sm * leftBladeTranslate * scaleMatrix;
-    ourShader.setMat4("model", model);
-    ourShader.setVec4("shapeColor", glm::vec4(0.5, 0.6, 0.5, 1.0));
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
-    //front fan
-    //translateMatrix = translateMatrixprev * glm::translate(identityMatrix, glm::vec3(0.0, -0.075, 0.5));
-    frontBladeTranslate = glm::translate(identityMatrix, glm::vec3(-0.2, 0.0, 0.3));
-    scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.5f, -0.1f, 2.0));
-    model = translateMatrix * sm * frontBladeTranslate * scaleMatrix;
-    ourShader.setMat4("model", model);
-    ourShader.setVec4("shapeColor", glm::vec4(0.5, 0.6, 0.5, 1.0));
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
-    //right fan
-    //translateMatrix = translateMatrix * glm::translate(identityMatrix, glm::vec3(0.5, 0.0, 0.0));
-    rightBladeTranslate = glm::translate(identityMatrix, glm::vec3(0.25, 0.0, 0.25));
-    scaleMatrix = glm::scale(identityMatrix, glm::vec3(2.0f, -0.1f, -0.5));
-    model = translateMatrix * sm * rightBladeTranslate * scaleMatrix;
-    ourShader.setMat4("model", model);
-    ourShader.setVec4("shapeColor", glm::vec4(0.5, 0.6, 0.5, 1.0));
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
-    //back fan
-    //translateMatrix = translateMatrix * glm::translate(identityMatrix, glm::vec3(0.0, 0.0, -0.5));
-    backBladeTranslate = glm::translate(identityMatrix, glm::vec3(0.25, 0.0, -0.25));
-    scaleMatrix = glm::scale(identityMatrix, glm::vec3(-0.5f, -0.1f, -2.0));
-    model = translateMatrix * sm * backBladeTranslate * scaleMatrix;
-    ourShader.setMat4("model", model);
-    ourShader.setVec4("shapeColor", glm::vec4(0.5, 0.6, 0.5, 1.0));
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-}
 
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     // make sure the viewport matches the new window dimensions; note that width and
@@ -884,6 +497,7 @@ void processInput(GLFWwindow* window)
     }
 }
 
+
 void ambienton_off(Shader& lightingShader)
 {
     double currentTime = glfwGetTime();
@@ -956,30 +570,11 @@ void specular_on_off(Shader& lightingShader)
         lastKeyPressTime = currentTime;
     }
 }
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-    if (key == GLFW_KEY_1 && action == GLFW_PRESS)
-    {
-        directionLightOn = !directionLightOn;
-    }
 
-    if (key == GLFW_KEY_2 && action == GLFW_PRESS)
-    {
-        if(pointLightOnOne) pointlight1.turnOff(); else pointlight1.turnOn();
-
-        pointLightOnOne = !pointLightOnOne;
-    }
-
-    if(key == GLFW_KEY_3 && action == GLFW_PRESS){
-        if(pointLightOnTwo) pointlight2.turnOff(); else pointlight2.turnOn();
-        pointLightOnTwo = !pointLightOnTwo;
-    }
-    
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){    
 }
 
-
 // glfw: whenever the mouse moves, this callback is called
-// -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
     float xpos = static_cast<float>(xposIn);
