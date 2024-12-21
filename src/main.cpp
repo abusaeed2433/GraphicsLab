@@ -318,6 +318,7 @@ int main()
 // constant
 const float WALL_WIDTH = 5.0f;
 const float BASE_HEIGHT = 40.0f;
+const float FLOOR_HEIGHT = 300.0f;
 int drawAll(Shader ourShader, glm::mat4 identityMatrix){
     // draw rectangle
 
@@ -376,9 +377,9 @@ int drawAll(Shader ourShader, glm::mat4 identityMatrix){
         );
 
         // building base - little extra
-        drawRectDivider( /*start pos*/ 700,20,850, /*end pos*/ 900, 20+BASE_HEIGHT, 900, /*color*/ 90, 60, 40, /*shine*/ 10, 
-            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-        );
+        // drawRectDivider( /*start pos*/ 700,20,850, /*end pos*/ 900, 20+BASE_HEIGHT, 900, /*color*/ 90, 60, 40, /*shine*/ 10, 
+        //     ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+        // );
 
         // stairs-1
         drawRectDivider( /*start pos*/ 550,20,850, /*end pos*/ 650, 20+BASE_HEIGHT-10.0f, 870, /*color*/ 105,105,105, /*shine*/ 15, 
@@ -389,6 +390,19 @@ int drawAll(Shader ourShader, glm::mat4 identityMatrix){
             ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
         );
 
+    }
+
+    // Ceiling of two stores
+    if(1){
+        // ceiling of first store
+        drawRectDivider( /*start pos*/ 100,20+BASE_HEIGHT+FLOOR_HEIGHT,100, /*end pos*/ 900, 20+BASE_HEIGHT+FLOOR_HEIGHT+20, 850, /*color*/ 60, 50, 40, /*shine*/ 5, 
+            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+        );
+
+        // ceiling of second store
+        drawRectDivider( /*start pos*/ 100,20+BASE_HEIGHT+2*FLOOR_HEIGHT,100, /*end pos*/ 900, 20+BASE_HEIGHT+2*FLOOR_HEIGHT+20, 850, /*color*/ 60, 50, 40, /*shine*/ 5, 
+            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+        );
     }
 
 
