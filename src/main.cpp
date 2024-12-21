@@ -315,6 +315,9 @@ int main()
     return 0;
 }
 
+// constant
+const float WALL_WIDTH = 5.0f;
+const float BASE_HEIGHT = 40.0f;
 int drawAll(Shader ourShader, glm::mat4 identityMatrix){
     // draw rectangle
 
@@ -331,38 +334,62 @@ int drawAll(Shader ourShader, glm::mat4 identityMatrix){
     );
 
     // All walls
-    // right wall
-    drawRectDivider( /*start pos*/ 980, 20, 0, /*end pos*/ 1000, 200, 980, /*color*/ 139, 79, 57, /*shine*/ 32, 
-        ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
-    );
-    // left wall
-    drawRectDivider( /*start pos*/ 0, 20, 0, /*end pos*/ 20, 200, 980, /*color*/ 139, 79, 57, /*shine*/ 32, 
-        ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
-    );
+    if(0) // don't draw now
+    {
+        // right wall
+        drawRectDivider( /*start pos*/ 1000-WALL_WIDTH, WALL_WIDTH, 0, /*end pos*/ 1000, 200, 1000-WALL_WIDTH, /*color*/ 139, 79, 57, /*shine*/ 32, 
+            ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
+        );
+        // left wall
+        drawRectDivider( /*start pos*/ 0, 20, 0, /*end pos*/ WALL_WIDTH, 200, 1000-WALL_WIDTH, /*color*/ 139, 79, 57, /*shine*/ 32, 
+            ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
+        );
 
-    // back wall
-    drawRectDivider( /*start pos*/ 20, 20, 0, /*end pos*/ 980, 200, 20, /*color*/ 139, 79, 57, /*shine*/ 32, 
-        ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
-    );
+        // back wall
+        drawRectDivider( /*start pos*/ WALL_WIDTH, 20, 0, /*end pos*/ 1000-WALL_WIDTH, 200, WALL_WIDTH, /*color*/ 139, 79, 57, /*shine*/ 32, 
+            ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
+        );
 
-    // front wall - left half
-    drawRectDivider( /*start pos*/ 0, 20, 980, /*end pos*/ 400, 200, 1000, /*color*/ 139, 79, 57, /*shine*/ 32, 
-        ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
-    );
-    // left side piller
-    drawRectDivider( /*start pos*/ 400, 20, 1000, /*end pos*/ 420, 200, 1000, /*color*/ 143, 127, 132, /*shine*/ 32, 
-        ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-    );
-    // right side piller
-    drawRectDivider( /*start pos*/ 580, 20, 1000, /*end pos*/ 600, 200, 1000, /*color*/ 143, 127, 132, /*shine*/ 32, 
-        ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-    );
-    // front wall - right half
-    drawRectDivider( /*start pos*/ 600, 20, 980, /*end pos*/ 1000, 200, 1000, /*color*/ 139, 79, 57, /*shine*/ 32, 
-        ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
-    );
+        // front wall - left half
+        drawRectDivider( /*start pos*/ 0, 20, 1000-WALL_WIDTH, /*end pos*/ 400, 200, 1000, /*color*/ 139, 79, 57, /*shine*/ 32, 
+            ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
+        );
+        // left side piller
+        drawRectDivider( /*start pos*/ 400, 20, 1000, /*end pos*/ 400+WALL_WIDTH, 200, 1000, /*color*/ 143, 127, 132, /*shine*/ 32, 
+            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+        );
+        // right side piller
+        drawRectDivider( /*start pos*/ 600-WALL_WIDTH, 20, 1000, /*end pos*/ 600, 200, 1000, /*color*/ 143, 127, 132, /*shine*/ 32, 
+            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+        );
+        // front wall - right half
+        drawRectDivider( /*start pos*/ 600, 20, 1000-WALL_WIDTH, /*end pos*/ 1000, 200, 1000, /*color*/ 139, 79, 57, /*shine*/ 32, 
+            ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
+        );
+    }
 
+    // building base & stairs
+    if(1){
+        // building base - main
+        drawRectDivider( /*start pos*/ 100,20,100, /*end pos*/ 900, 20+BASE_HEIGHT, 850, /*color*/ 90, 60, 40, /*shine*/ 10, 
+            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+        );
 
+        // building base - little extra
+        drawRectDivider( /*start pos*/ 700,20,850, /*end pos*/ 900, 20+BASE_HEIGHT, 900, /*color*/ 90, 60, 40, /*shine*/ 10, 
+            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+        );
+
+        // stairs-1
+        drawRectDivider( /*start pos*/ 550,20,850, /*end pos*/ 650, 20+BASE_HEIGHT-10.0f, 870, /*color*/ 105,105,105, /*shine*/ 15, 
+            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+        );
+        // stairs-2
+        drawRectDivider( /*start pos*/ 550,20,870, /*end pos*/ 650, 20+BASE_HEIGHT/2-5.0f, 890, /*color*/ 105,105,105, /*shine*/ 15, 
+            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+        );
+
+    }
 
 
 }
