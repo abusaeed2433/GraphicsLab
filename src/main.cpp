@@ -26,7 +26,8 @@
 
 using namespace std;
 
-#define PI 3.14159265359
+//#define PI 3.14159265359
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -102,8 +103,6 @@ bool on = false;
 // light settings
 bool pointLightOnOne = true;
 bool pointLightOnTwo = true;
-bool directionalLightOn = true;
-bool SpotLightOn = true;
 bool AmbientON = true;
 bool DiffusionON = true;
 bool SpecularON = true;
@@ -172,73 +171,6 @@ void initBinding(unsigned int &VAO, unsigned int &VBO, unsigned int &EBO, Shader
     ourShader.use();
 }
 
-std::vector<std::unique_ptr<Shape>> readShapes() {
-    std::ifstream file(
-        "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\project\\src\\points.txt"
-    );
-
-    if (!file.is_open()) {
-        std::cerr << "Failed to open file" << std::endl;
-        return {};
-    }
-
-    std::vector<std::unique_ptr<Shape>> shapes;
-    std::string line;
-
-    while (std::getline(file, line)) {
-        if (line.empty()) continue;
-
-        if (line.substr(0, 6) == "#start"){// Start of a shape definition block
-            printf("Reading shape\n");
-            std::getline(file, line); // Read shape metadata line
-
-            std::istringstream iss(line);
-            int catId, id;
-            std::string name;
-
-            iss >> catId >> name >> id;
-
-            if (catId == 0) { // Ignore block if id is 0
-                while (line != "#end") std::getline(file, line);
-                printf("Ignoring shape\n");
-                continue;
-            }
-
-            // color
-            float x, y, z;
-            char ch;
-            std::getline(file, line);
-            std::istringstream pointStream(line);
-            pointStream >> x >> ch >> y >> ch >> z;
-            Point color(x, y, z);
-
-            std::vector<Point> points;
-            while (std::getline(file, line)) {
-                if (line == "#end") break;                
-                
-                std::istringstream pointStream(line);
-                pointStream >> x >> ch >> y >> ch >> z;
-                points.emplace_back(x, y, z);
-            }
-
-            if (catId == 3) { // Triangle
-
-                if (points.size() >= 3) { // Ensure there are enough points for a triangle
-                    printf("Creating triangle\n");
-                    shapes.push_back(std::make_unique<Triangle>(color,points[0], points[1], points[2]));
-                }
-            }
-            else if(catId == 4){
-                if (points.size() >= 4) { // Ensure there are enough points for a rectangle
-                    shapes.push_back( std::make_unique<Rectangle>(color, points[0], points[1], points[2], points[3]) );
-                }
-            }
-        }
-    }
-
-    return shapes;
-}
-// lighting
 //directional light
 bool directionLightOn = true;
 bool directionalAmbient = true;
@@ -399,8 +331,12 @@ int main()
             diffuse_on_off(lightingShader);
         }
 
-        if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) {
+        if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS) {
             specular_on_off(lightingShader);
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) {
+            spotLightOn = !spotLightOn;
         }
 
         glm::mat4 projection(0.0f);
@@ -1024,7 +960,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 {
     if (key == GLFW_KEY_1 && action == GLFW_PRESS)
     {
-        directionalLightOn = !directionalLightOn;
+        directionLightOn = !directionLightOn;
     }
 
     if (key == GLFW_KEY_2 && action == GLFW_PRESS)
