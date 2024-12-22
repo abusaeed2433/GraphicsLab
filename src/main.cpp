@@ -340,6 +340,8 @@ int main()
 const float WALL_WIDTH = 5.0f;
 const float BASE_HEIGHT = 40.0f;
 const float FLOOR_HEIGHT = 300.0f;
+const float UPTO_BASE_HEIGHT = 20.0f + BASE_HEIGHT;
+
 int drawAll(){
     // draw rectangle
 
@@ -381,7 +383,7 @@ int drawAll(){
     // building base & stairs
     if(1){
         // building base - main
-        drawRectDivider( /*start pos*/ 100,20,100, /*end pos*/ 900, 20+BASE_HEIGHT, 850, /*color*/ 90, 60, 40, /*shine*/ 10);
+        drawRectDivider( /*start pos*/ 100,20,100, /*end pos*/ 900, 20.0f+BASE_HEIGHT, 850, /*color*/ 90, 60, 40, /*shine*/ 10);
 
         // building base - little extra
         // drawRectDivider( /*start pos*/ 700,20,850, /*end pos*/ 900, 20+BASE_HEIGHT, 900, /*color*/ 90, 60, 40, /*shine*/ 10, 
@@ -413,8 +415,8 @@ int drawAll(){
         float supportinPillerWidthX = 5.0f;
         float supportinPillerWidthZ = 10.0f;
         
-        float xPositions[] = {100,300,500-pillerWidthX,650,800};
-        int xSize = 5;
+        float xPositions[] = {100,300,500-pillerWidthX,650};
+        int xSize = 4;
 
         float minY = 20+BASE_HEIGHT;
         float maxY = minY+FLOOR_HEIGHT;
@@ -446,9 +448,9 @@ int drawAll(){
                 }
             }
             // for the last piller to the end
-            repeatAlongX(xPositions[xSize-1], 900, minY, minZ, supportinPillerWidthX, FLOOR_HEIGHT/4, supportinPillerWidthZ, 3, EndFill::NONE);
-            drawRectDivider( /*start*/ xPositions[xSize-1]+pillerWidthX,smallPillerHeight,minZ,
-                /*end*/ 900-pillerWidthX, smallPillerHeight+horizWoodHeightY, maxZ, /*color*/ 50, 40, 30, /*shine*/ 12);
+            // repeatAlongX(xPositions[xSize-1], 900, minY, minZ, supportinPillerWidthX, FLOOR_HEIGHT/4, supportinPillerWidthZ, 3, EndFill::NONE);
+            // drawRectDivider( /*start*/ xPositions[xSize-1]+pillerWidthX,smallPillerHeight,minZ,
+            //    /*end*/ 900-pillerWidthX, smallPillerHeight+horizWoodHeightY, maxZ, /*color*/ 50, 40, 30, /*shine*/ 12);
         }
 
         // back supporting pillers
@@ -468,12 +470,12 @@ int drawAll(){
                     /*end*/ x, smallPillerHeight+horizWoodHeightY, maxZ, /*color*/ 50, 40, 30, /*shine*/ 12);
             }
             // for the last piller to the end
-            repeatAlongX(xPositions[xSize-1], 900, minY, minZ, supportinPillerWidthX, FLOOR_HEIGHT/4, supportinPillerWidthZ, 3, EndFill::NONE);
-            drawRectDivider( /*start*/ xPositions[xSize-1]+pillerWidthX,smallPillerHeight,minZ,
-                /*end*/ 900-pillerWidthX, smallPillerHeight+horizWoodHeightY, maxZ, /*color*/ 50, 40, 30, /*shine*/ 12);
+            // repeatAlongX(xPositions[xSize-1], 900, minY, minZ, supportinPillerWidthX, FLOOR_HEIGHT/4, supportinPillerWidthZ, 3, EndFill::NONE);
+            // drawRectDivider( /*start*/ xPositions[xSize-1]+pillerWidthX,smallPillerHeight,minZ,
+            //    /*end*/ 900-pillerWidthX, smallPillerHeight+horizWoodHeightY, maxZ, /*color*/ 50, 40, 30, /*shine*/ 12);
         }
 
-        // left & right supporting pillers
+        // left supporting pillers
         if(1){
             float x = 100;
             float step = 150;
@@ -489,8 +491,8 @@ int drawAll(){
                 drawRectDivider( /*start*/ x,minY,z, /*end*/ x+pillerWidthX, maxY, z+pillerWidthZ, /*color*/ 80, 70, 60, /*shine*/ 12);
                 
                 // right
-                x = 900 - pillerWidthX;
-                drawRectDivider( /*start*/ x,minY,z, /*end*/ x+pillerWidthX, maxY, z+pillerWidthZ, /*color*/ 80, 70, 60, /*shine*/ 12);
+                // x = 900 - pillerWidthX;
+                // drawRectDivider( /*start*/ x,minY,z, /*end*/ x+pillerWidthX, maxY, z+pillerWidthZ, /*color*/ 80, 70, 60, /*shine*/ 12);
 
                 if(tempZ == 100) { z += step; continue; }
                 
@@ -498,8 +500,8 @@ int drawAll(){
                 x = 100;
                 repeatAlongZ(tempZ-step, tempZ, x, minY, supportinPillerWidthX, FLOOR_HEIGHT/4, supportinPillerWidthZ, 4, EndFill::NONE);
                 // right supporting small pillers
-                x = 900 - pillerWidthX;
-                repeatAlongZ(tempZ-step, tempZ, x, minY, supportinPillerWidthX, FLOOR_HEIGHT/4, supportinPillerWidthZ, 4, EndFill::NONE);
+                // x = 900 - pillerWidthX;
+                // repeatAlongZ(tempZ-step, tempZ, x, minY, supportinPillerWidthX, FLOOR_HEIGHT/4, supportinPillerWidthZ, 4, EndFill::NONE);
 
                 // left wooden bar
                 x = 100;
@@ -509,9 +511,9 @@ int drawAll(){
                     /*end*/ x+horizWoodHeightX, smallPillerHeight+horizWoodHeightY, tempZ, /*color*/ 50, 40, 30, /*shine*/ 12);
                 
                 // right wooden bar
-                x = 900 - horizWoodHeightX;
-                drawRectDivider( /*start*/ x, smallPillerHeight, tempZ-step+pillerWidthZ,
-                    /*end*/ x+horizWoodHeightX, smallPillerHeight+horizWoodHeightY, tempZ, /*color*/ 50, 40, 30, /*shine*/ 12);
+                // x = 900 - horizWoodHeightX;
+                // drawRectDivider( /*start*/ x, smallPillerHeight, tempZ-step+pillerWidthZ,
+                //    /*end*/ x+horizWoodHeightX, smallPillerHeight+horizWoodHeightY, tempZ, /*color*/ 50, 40, 30, /*shine*/ 12);
 
                 z += step;
             }
@@ -519,7 +521,31 @@ int drawAll(){
 
     }
 
-    
+    // Room - first floor
+    if(1){
+        int wr = 70, wg = 55, wb = 45;
+        // left wall
+        drawRectDivider(/*st*/ 200, UPTO_BASE_HEIGHT, 250, /*e*/ 200+WALL_WIDTH, UPTO_BASE_HEIGHT + FLOOR_HEIGHT, 600,/*cs*/ wr,wg,wb,6);
+
+        // back wall - left
+        drawRectDivider(/*st*/ 200, UPTO_BASE_HEIGHT, 250-WALL_WIDTH, /*e*/ 650, UPTO_BASE_HEIGHT + FLOOR_HEIGHT, 250,/*cs*/ wr,wg,wb,6);
+        // back wall - right
+        drawRectDivider(/*st*/ 650, UPTO_BASE_HEIGHT, 100, /*e*/ 900, UPTO_BASE_HEIGHT + FLOOR_HEIGHT, 100+WALL_WIDTH,/*cs*/ wr,wg,wb,6);
+
+        // front wall - left
+        drawRectDivider(/*st*/ 200, UPTO_BASE_HEIGHT, 600, /*e*/ 650, UPTO_BASE_HEIGHT + FLOOR_HEIGHT, 600+WALL_WIDTH,/*cs*/ wr,wg,wb,6);
+        // front wall - right
+        drawRectDivider(/*st*/ 650, UPTO_BASE_HEIGHT, 850-WALL_WIDTH, /*e*/ 900, UPTO_BASE_HEIGHT + FLOOR_HEIGHT, 850,/*cs*/ wr,wg,wb,6);
+
+        // middle wall - back part
+        drawRectDivider(/*st*/ 650, UPTO_BASE_HEIGHT, 100, /*e*/ 650+WALL_WIDTH, UPTO_BASE_HEIGHT + FLOOR_HEIGHT, 250,/*cs*/ wr,wg,wb,6);
+        // middle wall - front part
+        drawRectDivider(/*st*/ 650, UPTO_BASE_HEIGHT, 600, /*e*/ 650+WALL_WIDTH, UPTO_BASE_HEIGHT + FLOOR_HEIGHT, 850,/*cs*/ wr,wg,wb,6);
+
+        // right wall
+        drawRectDivider(/*st*/ 900-WALL_WIDTH, UPTO_BASE_HEIGHT, 100, /*e*/ 900, UPTO_BASE_HEIGHT + FLOOR_HEIGHT, 850,/*cs*/ wr,wg,wb,6);
+    }
+
 }
 
 int repeatAlongX(
