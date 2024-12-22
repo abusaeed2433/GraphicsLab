@@ -58,6 +58,9 @@ int drawRect(float sx, float sy, float sz, float ex, float ey, float ez, float r
 int repeatAlongX( float startX, float endX, /**/ float fixedY, float fixedZ, /**/ float widthX, float widthY, float widthZ, 
     int repeatCount, EndFill endFill, Shader ourShader = lightingShader, glm::mat4 identityMatrix = identityMatrix);
 
+int repeatAlongZ( float startZ, float endZ, /**/ float fixedX, float fixedY, /**/ float widthX, float widthY, float widthZ, 
+    int repeatCount, EndFill endFill, Shader ourShader = lightingShader, glm::mat4 identityMatrix = identityMatrix);
+
 void ambienton_off(Shader& lightingShader);
 void diffuse_on_off(Shader& lightingShader);
 void specular_on_off(Shader& lightingShader);
@@ -402,7 +405,7 @@ int drawAll(){
         // );
     }
 
-    // Piller
+    // Piller && Supporting pillers
     if(1){
         float pillerWidthX = 10.0f;
         float pillerWidthZ = 15.0f;
@@ -435,10 +438,12 @@ int drawAll(){
 
                 // supporting small pillers
                 if(i == 0) continue;
-                repeatAlongX(xPositions[i-1], xPositions[i], minY, minZ, supportinPillerWidthX, FLOOR_HEIGHT/4, supportinPillerWidthZ, 4, EndFill::NONE);
-                // horiz wooden bar
-                drawRectDivider( /*start*/ xPositions[i-1]+pillerWidthX,smallPillerHeight,minZ,
-                    /*end*/ x, smallPillerHeight+horizWoodHeightY, maxZ, /*color*/ 50, 40, 30, /*shine*/ 12);
+                if(i != 3){ // door
+                    repeatAlongX(xPositions[i-1], xPositions[i], minY, minZ, supportinPillerWidthX, FLOOR_HEIGHT/4, supportinPillerWidthZ, 4, EndFill::NONE);
+                    // horiz wooden bar
+                    drawRectDivider( /*start*/ xPositions[i-1]+pillerWidthX,smallPillerHeight,minZ,
+                        /*end*/ x, smallPillerHeight+horizWoodHeightY, maxZ, /*color*/ 50, 40, 30, /*shine*/ 12);
+                }
             }
             // for the last piller to the end
             repeatAlongX(xPositions[xSize-1], 900, minY, minZ, supportinPillerWidthX, FLOOR_HEIGHT/4, supportinPillerWidthZ, 3, EndFill::NONE);
@@ -468,27 +473,53 @@ int drawAll(){
                 /*end*/ 900-pillerWidthX, smallPillerHeight+horizWoodHeightY, maxZ, /*color*/ 50, 40, 30, /*shine*/ 12);
         }
 
-        // left & right pillers
-        float x = 100;
-        float step = 150;
-        float z = 100;
-        while(z <= 850){
-            if(z == 850){
-                z -= pillerWidthZ;
+        // left & right supporting pillers
+        if(1){
+            float x = 100;
+            float step = 150;
+            float z = 100;
+            while(z <= 850){
+                float tempZ = z;
+                if(z == 850){
+                    z -= pillerWidthZ;
+                }
+                
+                // left
+                x = 100;
+                drawRectDivider( /*start*/ x,minY,z, /*end*/ x+pillerWidthX, maxY, z+pillerWidthZ, /*color*/ 80, 70, 60, /*shine*/ 12);
+                
+                // right
+                x = 900 - pillerWidthX;
+                drawRectDivider( /*start*/ x,minY,z, /*end*/ x+pillerWidthX, maxY, z+pillerWidthZ, /*color*/ 80, 70, 60, /*shine*/ 12);
+
+                if(tempZ == 100) { z += step; continue; }
+                
+                // left supporting small pillers
+                x = 100;
+                repeatAlongZ(tempZ-step, tempZ, x, minY, supportinPillerWidthX, FLOOR_HEIGHT/4, supportinPillerWidthZ, 4, EndFill::NONE);
+                // right supporting small pillers
+                x = 900 - pillerWidthX;
+                repeatAlongZ(tempZ-step, tempZ, x, minY, supportinPillerWidthX, FLOOR_HEIGHT/4, supportinPillerWidthZ, 4, EndFill::NONE);
+
+                // left wooden bar
+                x = 100;
+                if(tempZ == 850) tempZ -= pillerWidthZ;
+
+                drawRectDivider( /*start*/ x, smallPillerHeight, tempZ-step+pillerWidthZ,
+                    /*end*/ x+horizWoodHeightX, smallPillerHeight+horizWoodHeightY, tempZ, /*color*/ 50, 40, 30, /*shine*/ 12);
+                
+                // right wooden bar
+                x = 900 - horizWoodHeightX;
+                drawRectDivider( /*start*/ x, smallPillerHeight, tempZ-step+pillerWidthZ,
+                    /*end*/ x+horizWoodHeightX, smallPillerHeight+horizWoodHeightY, tempZ, /*color*/ 50, 40, 30, /*shine*/ 12);
+
+                z += step;
             }
-            
-            drawRectDivider( /*start*/ x,minY,z, /*end*/ x+pillerWidthX, maxY, z+pillerWidthZ, /*color*/ 80, 70, 60, /*shine*/ 12);
-
-            x = 900 - pillerWidthX;
-            drawRectDivider( /*start*/ x,minY,z, /*end*/ x+pillerWidthX, maxY, z+pillerWidthZ, /*color*/ 80, 70, 60, /*shine*/ 12);
-
-            x = 100;
-            z += step;
         }
 
     }
 
-
+    
 }
 
 int repeatAlongX(
@@ -513,6 +544,30 @@ int repeatAlongX(
     
     // Filling right
     drawRectDivider( /*start pos*/ endX-widthX, fixedY,fixedZ, /*end pos*/ endX, fixedY+widthY, fixedZ+widthZ, /*color*/ 80, 70, 60, /*shine*/ 12);
+}
+
+int repeatAlongZ(
+    float startZ, float endZ, 
+    float fixedX, float fixedY, 
+    float widthX, float widthY, float widthZ, 
+    int repeatCount, EndFill endFill, Shader ourShader, glm::mat4 identityMatrix)
+{
+
+    float step = (endZ - startZ) / (repeatCount+1);
+    float z = startZ + step;
+    if(endFill == EndFill::LEFT || endFill == EndFill::BOTH){ // no left fill is needed
+        z = startZ;
+    }
+
+    while(z < endZ){
+        drawRectDivider( /*start pos*/ fixedX,fixedY,z, /*end pos*/ fixedX+widthX, fixedY+widthY, z+widthZ, /*color*/ 80, 70, 60, /*shine*/ 12);
+        z += step;
+    }
+    // no right fill is needed
+    if(endFill !=  EndFill::RIGHT && endFill != EndFill::BOTH) return 1;
+    
+    // Filling right
+    drawRectDivider( /*start pos*/ fixedX, fixedY, endZ-widthZ, /*end pos*/ fixedX+widthX, fixedY+widthY, endZ, /*color*/ 80, 70, 60, /*shine*/ 12);
 }
 
 // int repeatAndRepeat(
