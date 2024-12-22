@@ -23,6 +23,7 @@
 #include <vector>
 #include <sstream>
 #include <string>
+#include <bits/stdc++.h>
 
 using namespace std;
 
@@ -44,6 +45,8 @@ int drawRect(float sx, float sy, float sz, float ex, float ey, float ez, float r
 void ambienton_off(Shader& lightingShader);
 void diffuse_on_off(Shader& lightingShader);
 void specular_on_off(Shader& lightingShader);
+
+int size(float* arr);
 
 void drawCube(
     Shader shaderProgram, unsigned int VAO, glm::mat4 parentTrans, 
@@ -412,15 +415,35 @@ int drawAll(Shader ourShader, glm::mat4 identityMatrix){
         float xPositions[] = {100,300,500-pillerWidthX,650,800};
         float minY = 20+BASE_HEIGHT;
         float maxY = minY+FLOOR_HEIGHT;
+        float smallPillerHeight = minY + FLOOR_HEIGHT/4;
+
+        float horizWoodHeightX = 5.0f;
+        float horizWoodHeightY = 10.0f;
+        float horizWoodHeightZ = 15.0f;
 
         float maxZ = 850;
         float minZ = maxZ - pillerWidthZ;
+        int noOfSmallPillers = 3 + 1; // 5 piller. 1 for two side
 
         // front pillers
-        for(auto x: xPositions){
+        float prevX = -1;
+        for(int i=0; i<size(xPositions); i++){
+            float x = xPositions[i];
             drawRectDivider( /*start pos*/ x,minY,minZ, /*end pos*/ x+pillerWidthX, maxY, maxZ, /*color*/ 80, 70, 60, /*shine*/ 12, 
                 ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
             );
+
+            // supporting small pillers
+            if(i == 0) continue;
+
+            prevX = xPositions[i-1];
+aaa            
+
+            prevX = x;
+
+            if(i == size(xPositions) - 1){ // last
+
+            }
         }
 
         // back pillers
@@ -436,8 +459,8 @@ int drawAll(Shader ourShader, glm::mat4 identityMatrix){
         float x = 100;
         float step = 150;
         float z = 100;
-        while(z <= 900){
-            if(z == 900){
+        while(z <= 850){
+            if(z == 850){
                 z -= pillerWidthZ;
             }
             
@@ -457,6 +480,38 @@ int drawAll(Shader ourShader, glm::mat4 identityMatrix){
     }
 
 
+}
+
+enum class Axis{
+    X, Y, Z
+};
+
+enum class EndFill{
+    LEFT, RIGHT, BOTH
+};
+
+int repeatAndRepeat(float startPos, float endPos, Axis dir, int repeatCount, float lengthX, float legthY, float lengthZ, EndFill endFill){
+
+    float step = (endPos - startPos) / repeatCount;
+    while(startPos < endPos){
+        
+        startPos += step;
+    }
+    // horizontal wood
+    drawRectDivider( /*start pos*/ prevX+pillerWidthX,smallPillerHeight,minZ,
+            /*end pos*/ x+pillerWidthX, smallPillerHeight+horizWoodHeightY, minZ + horizWoodHeightZ, 
+            /*color*/ 80, 70, 60, /*shine*/ 12, 
+            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+    );
+
+    float step = (x-prevX) / noOfSmallPillers;
+    float smallX = prevX + step;
+    while (smallX < x){
+        drawRectDivider( /*start pos*/ smallX,minY,minZ, /*end pos*/ smallX+horizWoodHeightX, smallPillerHeight, maxZ, /*color*/ 80, 70, 60, /*shine*/ 12, 
+            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+        );
+        smallX += step;
+    }
 }
 
 float lengthX = 1000.0f;
@@ -665,6 +720,10 @@ void processInput(GLFWwindow* window)
     }
 }
 
+
+int size(float* arr){
+    return sizeof(arr)/sizeof(arr[0]);
+}
 
 void ambienton_off(Shader& lightingShader)
 {
