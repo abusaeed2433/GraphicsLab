@@ -35,12 +35,28 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
-int drawAll(Shader shaderProgram, glm::mat4 parentTrans);
-int drawRectDivider( float sx, float sy, float sz, float ex, float ey, float ez, 
-    float r, float g, float b, float shininess, Shader ourShader, glm::mat4 identityMatrix,
-    int divCountX = 1, int divCountY = 1, int divCountZ = 1);
-int drawRect(float sx, float sy, float sz, float ex, float ey, float ez, float r, float g, float b, float shininess, Shader shaderProgram, glm::mat4 identityMatrix);
+enum class Axis{
+    X, Y, Z
+};
 
+enum class EndFill{
+    LEFT, RIGHT, BOTH, NONE
+};
+
+Shader lightingShader = Shader();
+//Shader ourShader;
+glm::mat4 identityMatrix = glm::mat4(1.0f);
+
+int drawAll();//Shader shaderProgram, glm::mat4 parentTrans);
+int drawRectDivider(
+    float sx, float sy, float sz, float ex, float ey, float ez, 
+    float r, float g, float b, float shininess, 
+    int divCountX = 1, int divCountY = 1, int divCountZ = 1,
+    Shader ourShader = lightingShader, glm::mat4 identityMatrix = identityMatrix);
+
+int drawRect(float sx, float sy, float sz, float ex, float ey, float ez, float r, float g, float b, float shininess, Shader shaderProgram, glm::mat4 identityMatrix);
+int repeatAlongX( float startX, float endX, /**/ float fixedY, float fixedZ, /**/ float widthX, float widthY, float widthZ, 
+    int repeatCount, EndFill endFill, Shader ourShader = lightingShader, glm::mat4 identityMatrix = identityMatrix);
 
 void ambienton_off(Shader& lightingShader);
 void diffuse_on_off(Shader& lightingShader);
@@ -212,12 +228,12 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
     
-    Shader ourShader(
+    Shader ourShader = Shader(
         "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\project\\src\\VertexShader.vs", 
         "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\project\\src\\FragmentShader.fs"
     );
 
-    Shader lightingShader(
+    lightingShader = Shader(
         "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\project\\src\\vertexShaderForGouraudShading.vs", 
         "D:\\Documents\\COURSES\\4.2\\Lab\\Graphics\\project\\src\\fragmentShaderForGouraudShading.fs"
     );
@@ -295,7 +311,6 @@ int main()
         lightingShader.setVec3("material.emissive", glm::vec3(0.0f, 0.0f, 0.0f)); }
 
         //define matrices and vectors needed
-        glm::mat4 identityMatrix = glm::mat4(1.0f);
         glm::mat4 translateMatrix, rotateXMatrix, rotateYMatrix, rotateZMatrix, scaleMatrix, model, RotateTranslateMatrix, InvRotateTranslateMatrix;
         glm::vec3 color;
 
@@ -309,7 +324,7 @@ int main()
         glm::mat4 projection = glm::perspective(glm::radians(90.0f), 800.0f / 600.0f, 0.1f, 100.0f);
         ourShader.setMat4("projection", projection);
     
-        drawAll(lightingShader, identityMatrix);
+        drawAll();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -322,7 +337,7 @@ int main()
 const float WALL_WIDTH = 5.0f;
 const float BASE_HEIGHT = 40.0f;
 const float FLOOR_HEIGHT = 300.0f;
-int drawAll(Shader ourShader, glm::mat4 identityMatrix){
+int drawAll(){
     // draw rectangle
 
     // My canvas is of 1000 x 1000 x 1000
@@ -331,9 +346,7 @@ int drawAll(Shader ourShader, glm::mat4 identityMatrix){
     drawRectDivider(
         0, 0, 0,
         1000, 20, 1000,
-
-        112, 84, 62, 32, 
-        ourShader, identityMatrix,
+        112, 84, 62, 32,
         1, 1, 10
     );
 
@@ -341,43 +354,37 @@ int drawAll(Shader ourShader, glm::mat4 identityMatrix){
     if(0) // don't draw now
     {
         // right wall
-        drawRectDivider( /*start pos*/ 1000-WALL_WIDTH, WALL_WIDTH, 0, /*end pos*/ 1000, 200, 1000-WALL_WIDTH, /*color*/ 139, 79, 57, /*shine*/ 32, 
-            ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
+        drawRectDivider( /*start pos*/ 1000-WALL_WIDTH, WALL_WIDTH, 0, /*end pos*/ 1000, 200, 1000-WALL_WIDTH, /*color*/ 139, 79, 57, /*shine*/ 32,
+            1,10,1
         );
         // left wall
         drawRectDivider( /*start pos*/ 0, 20, 0, /*end pos*/ WALL_WIDTH, 200, 1000-WALL_WIDTH, /*color*/ 139, 79, 57, /*shine*/ 32, 
-            ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
+            1,10,1
         );
 
         // back wall
         drawRectDivider( /*start pos*/ WALL_WIDTH, 20, 0, /*end pos*/ 1000-WALL_WIDTH, 200, WALL_WIDTH, /*color*/ 139, 79, 57, /*shine*/ 32, 
-            ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
+            1,10,1
         );
 
         // front wall - left half
         drawRectDivider( /*start pos*/ 0, 20, 1000-WALL_WIDTH, /*end pos*/ 400, 200, 1000, /*color*/ 139, 79, 57, /*shine*/ 32, 
-            ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
+            1,10,1
         );
         // left side piller
-        drawRectDivider( /*start pos*/ 400, 20, 1000, /*end pos*/ 400+WALL_WIDTH, 200, 1000, /*color*/ 143, 127, 132, /*shine*/ 32, 
-            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-        );
+        drawRectDivider( /*start pos*/ 400, 20, 1000, /*end pos*/ 400+WALL_WIDTH, 200, 1000, /*color*/ 143, 127, 132, /*shine*/ 32);
         // right side piller
-        drawRectDivider( /*start pos*/ 600-WALL_WIDTH, 20, 1000, /*end pos*/ 600, 200, 1000, /*color*/ 143, 127, 132, /*shine*/ 32, 
-            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-        );
+        drawRectDivider( /*start pos*/ 600-WALL_WIDTH, 20, 1000, /*end pos*/ 600, 200, 1000, /*color*/ 143, 127, 132, /*shine*/ 32);
         // front wall - right half
         drawRectDivider( /*start pos*/ 600, 20, 1000-WALL_WIDTH, /*end pos*/ 1000, 200, 1000, /*color*/ 139, 79, 57, /*shine*/ 32, 
-            ourShader, identityMatrix, /*no of blocks*/ 1, 10, 1
+            1, 10, 1
         );
     }
 
     // building base & stairs
     if(1){
         // building base - main
-        drawRectDivider( /*start pos*/ 100,20,100, /*end pos*/ 900, 20+BASE_HEIGHT, 850, /*color*/ 90, 60, 40, /*shine*/ 10, 
-            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-        );
+        drawRectDivider( /*start pos*/ 100,20,100, /*end pos*/ 900, 20+BASE_HEIGHT, 850, /*color*/ 90, 60, 40, /*shine*/ 10);
 
         // building base - little extra
         // drawRectDivider( /*start pos*/ 700,20,850, /*end pos*/ 900, 20+BASE_HEIGHT, 900, /*color*/ 90, 60, 40, /*shine*/ 10, 
@@ -385,22 +392,15 @@ int drawAll(Shader ourShader, glm::mat4 identityMatrix){
         // );
 
         // stairs-1
-        drawRectDivider( /*start pos*/ 500,20,850, /*end pos*/ 650, 20+BASE_HEIGHT-10.0f, 870, /*color*/ 105,105,105, /*shine*/ 15, 
-            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-        );
+        drawRectDivider( /*start pos*/ 500,20,850, /*end pos*/ 650, 20+BASE_HEIGHT-10.0f, 870, /*color*/ 105,105,105, /*shine*/ 15);
         // stairs-2
-        drawRectDivider( /*start pos*/ 500,20,870, /*end pos*/ 650, 20+BASE_HEIGHT/2-5.0f, 890, /*color*/ 105,105,105, /*shine*/ 15, 
-            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-        );
-
+        drawRectDivider( /*start pos*/ 500,20,870, /*end pos*/ 650, 20+BASE_HEIGHT/2-5.0f, 890, /*color*/ 105,105,105, /*shine*/ 15);
     }
 
     // Ceiling of two stores
     if(1){
         // ceiling of first store
-        drawRectDivider( /*start pos*/ 100,20+BASE_HEIGHT+FLOOR_HEIGHT,100, /*end pos*/ 900, 20+BASE_HEIGHT+FLOOR_HEIGHT+20, 850, /*color*/ 60, 50, 40, /*shine*/ 5, 
-            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-        );
+        drawRectDivider( /*start pos*/ 100,20+BASE_HEIGHT+FLOOR_HEIGHT,100, /*end pos*/ 900, 20+BASE_HEIGHT+FLOOR_HEIGHT+20, 850, /*color*/ 60, 50, 40, /*shine*/ 5);
 
         // // ceiling of second store
         // drawRectDivider( /*start pos*/ 100,20+BASE_HEIGHT+2*FLOOR_HEIGHT,100, /*end pos*/ 900, 20+BASE_HEIGHT+2*FLOOR_HEIGHT+20, 850, /*color*/ 60, 50, 40, /*shine*/ 5, 
@@ -412,7 +412,13 @@ int drawAll(Shader ourShader, glm::mat4 identityMatrix){
     if(1){
         float pillerWidthX = 10.0f;
         float pillerWidthZ = 15.0f;
+
+        float supportinPillerWidthX = 5.0f;
+        float supportinPillerWidthZ = 10.0f;
+        
         float xPositions[] = {100,300,500-pillerWidthX,650,800};
+        int xSize = 5;
+
         float minY = 20+BASE_HEIGHT;
         float maxY = minY+FLOOR_HEIGHT;
         float smallPillerHeight = minY + FLOOR_HEIGHT/4;
@@ -425,34 +431,47 @@ int drawAll(Shader ourShader, glm::mat4 identityMatrix){
         float minZ = maxZ - pillerWidthZ;
         int noOfSmallPillers = 3 + 1; // 5 piller. 1 for two side
 
-        // front pillers
-        float prevX = -1;
-        for(int i=0; i<size(xPositions); i++){
-            float x = xPositions[i];
-            drawRectDivider( /*start pos*/ x,minY,minZ, /*end pos*/ x+pillerWidthX, maxY, maxZ, /*color*/ 80, 70, 60, /*shine*/ 12, 
-                ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-            );
 
-            // supporting small pillers
-            if(i == 0) continue;
+        // front supporting pillers
+        if(1){
+            for(int i=0; i<xSize; i++){
+                float x = xPositions[i];
+                // Piller
+                drawRectDivider( /*start pos*/ x,minY,minZ, /*end pos*/ x+pillerWidthX, maxY, maxZ, /*color*/ 80, 70, 60, /*shine*/ 12);
 
-            prevX = xPositions[i-1];
-aaa            
-
-            prevX = x;
-
-            if(i == size(xPositions) - 1){ // last
-
+                // supporting small pillers
+                if(i == 0) continue;
+                repeatAlongX(xPositions[i-1], xPositions[i], minY, minZ, supportinPillerWidthX, FLOOR_HEIGHT/4, supportinPillerWidthZ, 4, EndFill::NONE);
+                // horiz wooden bar
+                drawRectDivider( /*start pos*/ xPositions[i-1]+pillerWidthX,smallPillerHeight,minZ,
+                    /*end pos*/ x, smallPillerHeight+horizWoodHeightY, maxZ, /*color*/ 50, 40, 30, /*shine*/ 12);
             }
+            // for the last piller to the end
+            repeatAlongX(xPositions[xSize-1], 900, minY, minZ, supportinPillerWidthX, FLOOR_HEIGHT/4, supportinPillerWidthZ, 3, EndFill::NONE);
+            drawRectDivider( /*start pos*/ xPositions[xSize-1]+pillerWidthX,smallPillerHeight,minZ,
+                /*end pos*/ 900-pillerWidthX, smallPillerHeight+horizWoodHeightY, maxZ, /*color*/ 50, 40, 30, /*shine*/ 12);
         }
 
-        // back pillers
-        minZ = 100;
-        maxZ = minZ+pillerWidthZ;
-        for(auto x: xPositions){
-            drawRectDivider( /*start pos*/ x,minY,minZ, /*end pos*/ x+pillerWidthX, maxY, maxZ, /*color*/ 80, 70, 60, /*shine*/ 12, 
-                ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-            );
+        // back supporting pillers
+        if(1){
+            minZ = 100;
+            maxZ = minZ+pillerWidthZ;
+            for(int i=0; i<xSize; i++){
+                float x = xPositions[i];
+                // Piller
+                drawRectDivider( /*start pos*/ x,minY,minZ, /*end pos*/ x+pillerWidthX, maxY, maxZ, /*color*/ 80, 70, 60, /*shine*/ 12);
+
+                // supporting small pillers
+                if(i == 0) continue;
+                repeatAlongX(xPositions[i-1], xPositions[i], minY, minZ, supportinPillerWidthX, FLOOR_HEIGHT/4, supportinPillerWidthZ, 4, EndFill::NONE);
+                // horiz wooden bar
+                drawRectDivider( /*start pos*/ xPositions[i-1]+pillerWidthX,smallPillerHeight,minZ,
+                    /*end pos*/ x, smallPillerHeight+horizWoodHeightY, maxZ, /*color*/ 50, 40, 30, /*shine*/ 12);
+            }
+            // for the last piller to the end
+            repeatAlongX(xPositions[xSize-1], 900, minY, minZ, supportinPillerWidthX, FLOOR_HEIGHT/4, supportinPillerWidthZ, 3, EndFill::NONE);
+            drawRectDivider( /*start pos*/ xPositions[xSize-1]+pillerWidthX,smallPillerHeight,minZ,
+                /*end pos*/ 900-pillerWidthX, smallPillerHeight+horizWoodHeightY, maxZ, /*color*/ 50, 40, 30, /*shine*/ 12);
         }
 
         // left & right pillers
@@ -464,14 +483,10 @@ aaa
                 z -= pillerWidthZ;
             }
             
-            drawRectDivider( /*start pos*/ x,minY,z, /*end pos*/ x+pillerWidthX, maxY, z+pillerWidthZ, /*color*/ 80, 70, 60, /*shine*/ 12, 
-                ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-            );
+            drawRectDivider( /*start pos*/ x,minY,z, /*end pos*/ x+pillerWidthX, maxY, z+pillerWidthZ, /*color*/ 80, 70, 60, /*shine*/ 12);
 
             x = 900 - pillerWidthX;
-            drawRectDivider( /*start pos*/ x,minY,z, /*end pos*/ x+pillerWidthX, maxY, z+pillerWidthZ, /*color*/ 80, 70, 60, /*shine*/ 12, 
-                ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-            );
+            drawRectDivider( /*start pos*/ x,minY,z, /*end pos*/ x+pillerWidthX, maxY, z+pillerWidthZ, /*color*/ 80, 70, 60, /*shine*/ 12);
 
             x = 100;
             z += step;
@@ -482,37 +497,83 @@ aaa
 
 }
 
-enum class Axis{
-    X, Y, Z
-};
+int repeatAlongX(
+    float startX, float endX, 
+    float fixedY, float fixedZ, 
+    float widthX, float widthY, float widthZ, 
+    int repeatCount, EndFill endFill, Shader ourShader, glm::mat4 identityMatrix)
+{
 
-enum class EndFill{
-    LEFT, RIGHT, BOTH
-};
-
-int repeatAndRepeat(float startPos, float endPos, Axis dir, int repeatCount, float lengthX, float legthY, float lengthZ, EndFill endFill){
-
-    float step = (endPos - startPos) / repeatCount;
-    while(startPos < endPos){
-        
-        startPos += step;
+    float step = (endX - startX) / (repeatCount+1);
+    float x = startX + step;
+    if(endFill == EndFill::LEFT || endFill == EndFill::BOTH){ // no left fill is needed
+        x = startX;
     }
-    // horizontal wood
-    drawRectDivider( /*start pos*/ prevX+pillerWidthX,smallPillerHeight,minZ,
-            /*end pos*/ x+pillerWidthX, smallPillerHeight+horizWoodHeightY, minZ + horizWoodHeightZ, 
-            /*color*/ 80, 70, 60, /*shine*/ 12, 
-            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-    );
 
-    float step = (x-prevX) / noOfSmallPillers;
-    float smallX = prevX + step;
-    while (smallX < x){
-        drawRectDivider( /*start pos*/ smallX,minY,minZ, /*end pos*/ smallX+horizWoodHeightX, smallPillerHeight, maxZ, /*color*/ 80, 70, 60, /*shine*/ 12, 
-            ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-        );
-        smallX += step;
+    while(x < endX){
+        drawRectDivider( /*start pos*/ x,fixedY,fixedZ, /*end pos*/ x+widthX, fixedY+widthY, fixedZ+widthZ, /*color*/ 80, 70, 60, /*shine*/ 12);
+        x += step;
     }
+    // no right fill is needed
+    if(endFill !=  EndFill::RIGHT && endFill != EndFill::BOTH) return 1;
+    
+    // Filling right
+    drawRectDivider( /*start pos*/ endX-widthX, fixedY,fixedZ, /*end pos*/ endX, fixedY+widthY, fixedZ+widthZ, /*color*/ 80, 70, 60, /*shine*/ 12);
 }
+
+// int repeatAndRepeat(
+//         float startX, float startY, float startZ, 
+//         float endX, float endY, float endZ,
+//         Axis dir, int repeatCount, 
+//         float lengthX, float legthY, float lengthZ, EndFill endFill){
+    
+//     float start, end;
+
+//     if(dir == Axis::X) { start = startX; end = startX+lengthX;} 
+//     else if(dir == Axis::Y) { start = startY; end = startY+lengthY;} 
+//     else { start = startZ; end = startZ+lengthZ;}
+    
+//     float step = (end - start) / (repeatCount+1);
+
+
+//     if(endFill == EndFill::RIGHT){ // no left fill is needed
+//         start += step; 
+//     }
+
+//     while(start <= end){
+        
+//         float x, y, z;
+
+//         if(dir == Axis::X){ x = start; y = startY; z = startZ; }
+//         else if(dir == Axis::Y){ x = startX; y = start; z = startZ; }
+//         else{ x = startX; y = startY; z = start; }
+
+//         if(dir == Axis::X){
+//             drawRectDivider( 
+//                 /*start pos*/ start,startY,startZ, 
+//                 /*end pos*/ start+ +horizWoodHeightX, smallPillerHeight, maxZ, /*color*/ 80, 70, 60, /*shine*/ 12, 
+//                 ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+//             );
+//         }
+
+//         startPos += step;
+//     }
+//     // horizontal wood
+//     drawRectDivider( /*start pos*/ prevX+pillerWidthX,smallPillerHeight,minZ,
+//             /*end pos*/ x+pillerWidthX, smallPillerHeight+horizWoodHeightY, minZ + horizWoodHeightZ, 
+//             /*color*/ 80, 70, 60, /*shine*/ 12, 
+//             ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+//     );
+
+//     float step = (x-prevX) / noOfSmallPillers;
+//     float smallX = prevX + step;
+//     while (smallX < x){
+//         drawRectDivider( /*start pos*/ smallX,minY,minZ, /*end pos*/ smallX+horizWoodHeightX, smallPillerHeight, maxZ, /*color*/ 80, 70, 60, /*shine*/ 12, 
+//             ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
+//         );
+//         smallX += step;
+//     }
+// }
 
 float lengthX = 1000.0f;
 float lengthY = 1000.0f;
@@ -521,8 +582,8 @@ float lengthZ = 1000.0f;
 int drawRectDivider(
     float sx, float sy, float sz, float ex, float ey, float ez, 
     float r, float g, float b, 
-    float shininess, Shader ourShader, glm::mat4 identityMatrix,
-    int divCountX, int divCountY, int divCountZ){
+    float shininess, int divCountX, int divCountY, int divCountZ,
+    Shader ourShader, glm::mat4 identityMatrix){
 
     r /= 255.0f;
     g /= 255.0f;
