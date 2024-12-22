@@ -341,6 +341,7 @@ const float WALL_WIDTH = 5.0f;
 const float BASE_HEIGHT = 40.0f;
 const float FLOOR_HEIGHT = 300.0f;
 const float UPTO_BASE_HEIGHT = 20.0f + BASE_HEIGHT;
+const float DOOR_HEIGHT = 220.0f;
 
 int drawAll(){
     // draw rectangle
@@ -532,8 +533,10 @@ int drawAll(){
         // back wall - right
         drawRectDivider(/*st*/ 650, UPTO_BASE_HEIGHT, 100, /*e*/ 900, UPTO_BASE_HEIGHT + FLOOR_HEIGHT, 100+WALL_WIDTH,/*cs*/ wr,wg,wb,6);
 
-        // front wall - left
-        drawRectDivider(/*st*/ 200, UPTO_BASE_HEIGHT, 600, /*e*/ 650, UPTO_BASE_HEIGHT + FLOOR_HEIGHT, 600+WALL_WIDTH,/*cs*/ wr,wg,wb,6);
+        // front wall - left-top
+        drawRectDivider(/*st*/ 200, UPTO_BASE_HEIGHT+DOOR_HEIGHT, 600, /*e*/ 650, UPTO_BASE_HEIGHT + FLOOR_HEIGHT, 600+WALL_WIDTH,/*cs*/ wr,wg,wb,6);
+        // front wall - left-bottom
+        drawRectDivider(/*st*/ 200, UPTO_BASE_HEIGHT, 600, /*e*/ 550, UPTO_BASE_HEIGHT + DOOR_HEIGHT, 600+WALL_WIDTH,/*cs*/ wr,wg,wb,6);
         // front wall - right
         drawRectDivider(/*st*/ 650, UPTO_BASE_HEIGHT, 850-WALL_WIDTH, /*e*/ 900, UPTO_BASE_HEIGHT + FLOOR_HEIGHT, 850,/*cs*/ wr,wg,wb,6);
 
