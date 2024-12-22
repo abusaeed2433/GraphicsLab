@@ -342,6 +342,8 @@ const float BASE_HEIGHT = 40.0f;
 const float FLOOR_HEIGHT = 300.0f;
 const float UPTO_BASE_HEIGHT = 20.0f + BASE_HEIGHT;
 const float DOOR_HEIGHT = 220.0f;
+const float GAP = 4.0f;
+const float KEY_WIDTH = 15.0f;
 
 int drawAll(){
     // draw rectangle
@@ -549,6 +551,22 @@ int drawAll(){
         drawRectDivider(/*st*/ 900-WALL_WIDTH, UPTO_BASE_HEIGHT, 100, /*e*/ 900, UPTO_BASE_HEIGHT + FLOOR_HEIGHT, 850,/*cs*/ wr,wg,wb,6);
     }
 
+    // Building door - first floor
+    if(1){
+        int wr = 45, wg = 30, wb = 20, sh = 10;
+        // left bar
+        drawRectDivider(/*st*/ 550, UPTO_BASE_HEIGHT, 600, /*e*/ 550+WALL_WIDTH, UPTO_BASE_HEIGHT + DOOR_HEIGHT, 600+WALL_WIDTH,/*cs*/ wr,wg,wb,sh);
+        // right bar
+        drawRectDivider(/*st*/ 650-WALL_WIDTH, UPTO_BASE_HEIGHT, 600, /*e*/ 650, UPTO_BASE_HEIGHT + DOOR_HEIGHT, 600+WALL_WIDTH,/*cs*/ wr,wg,wb,sh);
+        // top bar
+        drawRectDivider(/*st*/ 550+WALL_WIDTH, UPTO_BASE_HEIGHT+DOOR_HEIGHT-WALL_WIDTH, 600, /*e*/ 650-WALL_WIDTH, UPTO_BASE_HEIGHT + DOOR_HEIGHT, 600+WALL_WIDTH,/*cs*/ wr,wg,wb,sh);
+        
+        // door body
+        drawRectDivider(/*st*/ 550+WALL_WIDTH, UPTO_BASE_HEIGHT+GAP, 600, /*e*/ 650-WALL_WIDTH, UPTO_BASE_HEIGHT + DOOR_HEIGHT-GAP, 600+WALL_WIDTH,/*cs*/ 30, 20, 15, 5);
+        
+        // door key hole holder. -> Slap key hole image
+        drawRectDivider(/*st*/ 650-4*GAP-KEY_WIDTH, UPTO_BASE_HEIGHT+DOOR_HEIGHT/2, 600+WALL_WIDTH, /*e*/ 650-4*GAP, UPTO_BASE_HEIGHT+DOOR_HEIGHT/2+KEY_WIDTH, 600+WALL_WIDTH+5,/*cs*/ 0, 0, 0, 5);
+    }
 }
 
 int repeatAlongX(
