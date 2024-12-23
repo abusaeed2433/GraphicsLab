@@ -60,6 +60,8 @@ int repeatAlongX( float startX, float endX, /**/ float fixedY, float fixedZ, /**
 
 int repeatAlongZ( float startZ, float endZ, /**/ float fixedX, float fixedY, /**/ float widthX, float widthY, float widthZ, 
     int repeatCount, EndFill endFill, Shader ourShader = lightingShader, glm::mat4 identityMatrix = identityMatrix);
+int drawGrave(float startX, float startY, float startZ);
+int drawQuadraticBezierCurve(float sx, float sy, float sz, float mx, float my, float mz, float ex, float ey, float ez, int numSegments);
 
 void ambienton_off(Shader& lightingShader);
 void diffuse_on_off(Shader& lightingShader);
@@ -358,7 +360,7 @@ int drawAll(){
     drawRectDivider(/*start*/ -800, 0, 0,/*end*/ 1700, 20, 1500, /*color-shine*/ 112, 84, 62, 32, /*repeat*/1, 1, 10 );
 
     // All walls
-    if(1)
+    if(0)
     {
         // right wall
         drawRectDivider( /*start*/ MAX_X-WALL_WIDTH, WALL_WIDTH, MIN_Z, /*end pos*/ MAX_X, 200, MAX_Z-WALL_WIDTH, /*color*/ 139, 79, 57, /*shine*/ 32,
@@ -383,7 +385,7 @@ int drawAll(){
     }
 
     // building base & stairs
-    if(1){
+    if(0){
         // building base - main
         drawRectDivider( /*start pos*/ 100,20,100, /*end pos*/ 900, 20.0f+BASE_HEIGHT, 850, /*color*/ 90, 60, 40, /*shine*/ 10);
 
@@ -399,7 +401,7 @@ int drawAll(){
     }
 
     // Ceiling of two stores
-    if(1){
+    if(0){
         // ceiling of first store
         drawRectDivider( /*start pos*/ 100,20+BASE_HEIGHT+FLOOR_HEIGHT,100, /*end pos*/ 900, 20+BASE_HEIGHT+FLOOR_HEIGHT+20, 850, /*color*/ 60, 50, 40, /*shine*/ 5);
 
@@ -410,7 +412,7 @@ int drawAll(){
     }
 
     // Piller && Supporting pillers
-    if(1){
+    if(0){
         float pillerWidthX = 10.0f;
         float pillerWidthZ = 15.0f;
 
@@ -524,7 +526,7 @@ int drawAll(){
     }
 
     // Room - first floor
-    if(1){
+    if(0){
         int wr = 70, wg = 55, wb = 45;
         // left wall
         drawRectDivider(/*st*/ 200, UPTO_BASE_HEIGHT, 250, /*e*/ 200+WALL_WIDTH, UPTO_BASE_HEIGHT + FLOOR_HEIGHT, 600,/*cs*/ wr,wg,wb,6);
@@ -551,7 +553,7 @@ int drawAll(){
     }
 
     // Building door - first floor
-    if(1){
+    if(0){
         int wr = 45, wg = 30, wb = 20, sh = 10;
         // left bar
         drawRectDivider(/*st*/ 550, UPTO_BASE_HEIGHT, 600, /*e*/ 550+WALL_WIDTH, UPTO_BASE_HEIGHT + DOOR_HEIGHT, 600+WALL_WIDTH,/*cs*/ wr,wg,wb,sh);
@@ -566,7 +568,94 @@ int drawAll(){
         // door key hole holder. -> Slap key hole image
         drawRectDivider(/*st*/ 650-4*GAP-KEY_WIDTH, UPTO_BASE_HEIGHT+DOOR_HEIGHT/2, 600+WALL_WIDTH, /*e*/ 650-4*GAP, UPTO_BASE_HEIGHT+DOOR_HEIGHT/2+KEY_WIDTH, 600+WALL_WIDTH+5,/*cs*/ 0, 0, 0, 5);
     }
+
+    // Outside graveyard
+    drawGrave( /*start*/ MIN_X+100, 20, MIN_Z+100);
+
 }
+
+const float GRAVE_X = 80.0f;
+const float GRAVE_BASE_Y = 5.0f;
+const float GRAVE_Z = 200.0f;
+int drawGrave(float startX, float startY, float startZ){
+    float gap = 4.0f;
+    // base
+    drawRectDivider( /*st*/ startX, startY, startZ, /*e*/ startX+GRAVE_X, startY+GRAVE_BASE_Y, startZ+GRAVE_Z, /*cs*/ 182, 166, 151, 12);
+
+    // top base - left & right
+    drawRectDivider( /*st*/ startX+gap, startY+GRAVE_BASE_Y, startZ+gap, /*e*/ startX+gap+.1*GRAVE_X, startY+4*GRAVE_BASE_Y, startZ+GRAVE_Z-gap, /*cs*/ 137, 139, 159, 12);
+    drawRectDivider( /*st*/ startX+.9*GRAVE_X-gap, startY+GRAVE_BASE_Y, startZ+gap, /*e*/ startX-gap+GRAVE_X, startY+4*GRAVE_BASE_Y, startZ+GRAVE_Z-gap, /*cs*/ 137, 139, 159, 12);
+    
+    // top base - front & back
+    drawRectDivider( /*st*/ startX+gap+.1*GRAVE_X, startY+GRAVE_BASE_Y, startZ+gap, /*e*/ startX+.9*GRAVE_X-gap, startY+4*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, /*cs*/ 137, 139, 159, 12);
+    drawRectDivider( /*st*/ startX+gap+.1*GRAVE_X, startY+GRAVE_BASE_Y, startZ+GRAVE_Z-gap-.1*GRAVE_X, /*e*/ startX+.9*GRAVE_X-gap, startY+4*GRAVE_BASE_Y, startZ+GRAVE_Z-gap, /*cs*/ 137, 139, 159, 12);
+
+    // base mud
+    drawRectDivider( /*st*/ startX+gap+.1*GRAVE_X, startY+GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, /*e*/ startX+GRAVE_X-gap, startY+3*GRAVE_BASE_Y, startZ+GRAVE_Z-gap, /*cs*/ 54, 50, 149, 12);
+
+    // square
+    drawQuadraticBezierCurve(
+        /*st*/ startX+.2*GRAVE_X, startY+4*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X,
+        /*mid*/ startX+.5*GRAVE_X, startY+8*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X,
+        /*end*/ startX+.8*GRAVE_X, startY+4*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, 10
+    );
+    
+}
+
+float lengthX = 1000.0f;
+float lengthY = 1000.0f;
+float lengthZ = 1000.0f;
+
+int drawQuadraticBezierCurve(float sx, float sy, float sz, float mx, float my, float mz, float ex, float ey, float ez, int numSegments) {
+    // Generate vertices for the Bézier curve
+    sx /= lengthX; sy /= lengthY; sz /= lengthZ; 
+    mx /= lengthX; my /= lengthY; mz /= lengthZ;
+    ex /= lengthX; ey /= lengthY; ez /= lengthZ;
+
+    glm::vec3 P0 = glm::vec3(sx,sy,sz); // Start point
+    glm::vec3 P1 = glm::vec3(mx,my,mz);   // Control point
+    glm::vec3 P2 = glm::vec3(ex,ey,ez);  // End point
+
+    std::vector<GLfloat> vertices;
+
+    vertices.push_back((sx+ex)/2);
+    vertices.push_back((sy+ey)/2);
+    vertices.push_back((sz+ez)/2);
+
+    for (int i = 0; i <= numSegments; i++) {
+        float t = static_cast<float>(i) / numSegments;
+        glm::vec3 point = (1 - t) * (1 - t) * P0 + 2 * (1 - t) * t * P1 + t * t * P2; // Bézier formula
+        vertices.push_back(point.x);
+        vertices.push_back(point.y);
+        vertices.push_back(point.z);
+    }
+
+    // Bind VAO and VBO
+    GLuint VAO, VBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
+
+    // Define vertex attributes
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // Use the shader and draw the curve
+    lightingShader.use();
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_LINE_STRIP, 0, numSegments + 1);
+
+    // Cleanup
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    glDeleteBuffers(1, &VBO);
+    glDeleteVertexArrays(1, &VAO);
+}
+
 
 int repeatAlongX(
     float startX, float endX, 
@@ -616,64 +705,6 @@ int repeatAlongZ(
     drawRectDivider( /*start pos*/ fixedX, fixedY, endZ-widthZ, /*end pos*/ fixedX+widthX, fixedY+widthY, endZ, /*color*/ 80, 70, 60, /*shine*/ 12);
 }
 
-// int repeatAndRepeat(
-//         float startX, float startY, float startZ, 
-//         float endX, float endY, float endZ,
-//         Axis dir, int repeatCount, 
-//         float lengthX, float legthY, float lengthZ, EndFill endFill){
-    
-//     float start, end;
-
-//     if(dir == Axis::X) { start = startX; end = startX+lengthX;} 
-//     else if(dir == Axis::Y) { start = startY; end = startY+lengthY;} 
-//     else { start = startZ; end = startZ+lengthZ;}
-    
-//     float step = (end - start) / (repeatCount+1);
-
-
-//     if(endFill == EndFill::RIGHT){ // no left fill is needed
-//         start += step; 
-//     }
-
-//     while(start <= end){
-        
-//         float x, y, z;
-
-//         if(dir == Axis::X){ x = start; y = startY; z = startZ; }
-//         else if(dir == Axis::Y){ x = startX; y = start; z = startZ; }
-//         else{ x = startX; y = startY; z = start; }
-
-//         if(dir == Axis::X){
-//             drawRectDivider( 
-//                 /*start pos*/ start,startY,startZ, 
-//                 /*end pos*/ start+ +horizWoodHeightX, smallPillerHeight, maxZ, /*color*/ 80, 70, 60, /*shine*/ 12, 
-//                 ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-//             );
-//         }
-
-//         startPos += step;
-//     }
-//     // horizontal wood
-//     drawRectDivider( /*start pos*/ prevX+pillerWidthX,smallPillerHeight,minZ,
-//             /*end pos*/ x+pillerWidthX, smallPillerHeight+horizWoodHeightY, minZ + horizWoodHeightZ, 
-//             /*color*/ 80, 70, 60, /*shine*/ 12, 
-//             ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-//     );
-
-//     float step = (x-prevX) / noOfSmallPillers;
-//     float smallX = prevX + step;
-//     while (smallX < x){
-//         drawRectDivider( /*start pos*/ smallX,minY,minZ, /*end pos*/ smallX+horizWoodHeightX, smallPillerHeight, maxZ, /*color*/ 80, 70, 60, /*shine*/ 12, 
-//             ourShader, identityMatrix, /*no of blocks*/ 1, 1, 1
-//         );
-//         smallX += step;
-//     }
-// }
-
-float lengthX = 1000.0f;
-float lengthY = 1000.0f;
-float lengthZ = 1000.0f;
-
 int drawRectDivider(
     float sx, float sy, float sz, float ex, float ey, float ez, 
     float r, float g, float b, 
@@ -703,7 +734,7 @@ int drawRectDivider(
     return 1;
 }
 
-int drawRect(
+int drawRectOld(
     float sx, float sy, float sz, float ex, float ey, float ez, 
     float r, float g, float b, float shininess, Shader ourShader, glm::mat4 identityMatrix){
     // top left point (sx,sy,sz)
@@ -711,12 +742,12 @@ int drawRect(
     // color properties
     
     GLfloat vertices[] = {
-        // Positions           // Colors
         sx/lengthX, sy/lengthY, sz/lengthZ,  1.0f, 0.0f, 0.0f, // Bottom-left
         ex/lengthX, sy/lengthY, sz/lengthZ,  0.0f, 1.0f, 0.0f, // Bottom-right
         ex/lengthX, ey/lengthY, sz/lengthZ,  0.0f, 0.0f, 1.0f, // Top-right
         sx/lengthX, ey/lengthY, sz/lengthZ,  1.0f, 1.0f, 0.0f,  // Top-left
 
+        // back face
         sx/lengthX, sy/lengthY, ez/lengthZ,  1.0f, 0.0f, 0.0f, // Bottom-left
         ex/lengthX, sy/lengthY, ez/lengthZ,  0.0f, 1.0f, 0.0f, // Bottom-right
         ex/lengthX, ey/lengthY, ez/lengthZ,  0.0f, 0.0f, 1.0f, // Top-right
@@ -728,7 +759,6 @@ int drawRect(
         /* Right */ 1, 5, 6, 6, 2, 1, /* Top  */ 3, 7, 6, 6, 2, 3, /* Bottom */ 0, 1, 5, 5, 4, 0
     };
 
-    ourShader.use();
     ourShader.use();
     ourShader.setVec3("material.ambient", glm::vec3(r, g, b));
     ourShader.setVec3("material.diffuse", glm::vec3(r, g, b));
@@ -758,8 +788,6 @@ int drawRect(
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
 
-    
-
     glm::mat4 model = glm::mat4(1.0f);
     ourShader.setMat4("model", identityMatrix);
     ourShader.setVec4("shapeColor", glm::vec4(1.0, 1.0, 1.0, 1.0));
@@ -778,6 +806,108 @@ int drawRect(
 
     return 0;
 }
+
+int drawRect(
+    float sx, float sy, float sz, float ex, float ey, float ez, 
+    float r, float g, float b, float shininess, Shader ourShader, glm::mat4 modelMatrix) {
+
+    sx /= lengthX; sy /= lengthY; sz /= lengthZ;
+    ex /= lengthX; ey /= lengthY; ez /= lengthZ;
+    
+    // Vertices for the cuboid (position + normals)
+    GLfloat vertices[] = {
+        // Front face
+        sx, sy, sz,  0.0f,  0.0f, -1.0f,  // Bottom-left
+        ex, sy, sz,  0.0f,  0.0f, -1.0f,  // Bottom-right
+        ex, ey, sz,  0.0f,  0.0f, -1.0f,  // Top-right
+        sx, ey, sz,  0.0f,  0.0f, -1.0f,  // Top-left
+
+        // Back face
+        sx, sy, ez,  0.0f,  0.0f,  1.0f,  // Bottom-left
+        ex, sy, ez,  0.0f,  0.0f,  1.0f,  // Bottom-right
+        ex, ey, ez,  0.0f,  0.0f,  1.0f,  // Top-right
+        sx, ey, ez,  0.0f,  0.0f,  1.0f,  // Top-left
+
+        // Left face
+        sx, sy, sz, -1.0f,  0.0f,  0.0f,  // Bottom-left
+        sx, sy, ez, -1.0f,  0.0f,  0.0f,  // Bottom-right
+        sx, ey, ez, -1.0f,  0.0f,  0.0f,  // Top-right
+        sx, ey, sz, -1.0f,  0.0f,  0.0f,  // Top-left
+
+        // Right face
+        ex, sy, sz,  1.0f,  0.0f,  0.0f,  // Bottom-left
+        ex, sy, ez,  1.0f,  0.0f,  0.0f,  // Bottom-right
+        ex, ey, ez,  1.0f,  0.0f,  0.0f,  // Top-right
+        ex, ey, sz,  1.0f,  0.0f,  0.0f,  // Top-left
+
+        // Top face
+        sx, ey, sz,  0.0f,  1.0f,  0.0f,  // Bottom-left
+        ex, ey, sz,  0.0f,  1.0f,  0.0f,  // Bottom-right
+        ex, ey, ez,  0.0f,  1.0f,  0.0f,  // Top-right
+        sx, ey, ez,  0.0f,  1.0f,  0.0f,  // Top-left
+
+        // Bottom face
+        sx, sy, sz,  0.0f, -1.0f,  0.0f,  // Bottom-left
+        ex, sy, sz,  0.0f, -1.0f,  0.0f,  // Bottom-right
+        ex, sy, ez,  0.0f, -1.0f,  0.0f,  // Top-right
+        sx, sy, ez,  0.0f, -1.0f,  0.0f   // Top-left
+    };
+
+    GLuint indices[] = { 
+        /* Front */ 0, 1, 2, 2, 3, 0, 
+        /* Back  */ 4, 5, 6, 6, 7, 4, 
+        /* Left  */ 8, 9, 10, 10, 11, 8,
+        /* Right */ 12, 13, 14, 14, 15, 12, 
+        /* Top   */ 16, 17, 18, 18, 19, 16, 
+        /* Bottom*/ 20, 21, 22, 22, 23, 20
+    };
+
+    // Shader setup
+    ourShader.use();
+    ourShader.setVec3("material.ambient", glm::vec3(r, g, b));
+    ourShader.setVec3("material.diffuse", glm::vec3(r, g, b));
+    ourShader.setVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+    ourShader.setFloat("material.shininess", shininess);
+    ourShader.setMat4("model", modelMatrix);
+
+    // Generate and bind VAO
+    GLuint VAO, VBO, EBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
+    glBindVertexArray(VAO);
+
+    // Vertex buffer object (VBO)
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // Element buffer object (EBO)
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    // Vertex attributes (position and normal)
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
+
+    // Draw the cuboid
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+    // Cleanup
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+    glDeleteVertexArrays(1, &VAO);
+
+    return 0;
+}
+
 
 
 
