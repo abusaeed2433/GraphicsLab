@@ -62,7 +62,7 @@ int repeatAlongZ( float startZ, float endZ, /**/ float fixedX, float fixedY, /**
     int repeatCount, EndFill endFill, Shader ourShader = lightingShader, glm::mat4 identityMatrix = identityMatrix);
 int drawGrave(float startX, float startY, float startZ);
 
-int drawQuadraticBezierCurve(
+int drawGraveCurve(
     float sx, float sy, float sz, 
     float mx, float my, float mz, 
     float ex, float ey, float ez, 
@@ -600,20 +600,19 @@ int drawGrave(float startX, float startY, float startZ){
 
         // base mud
         drawRectDivider( /*st*/ startX+gap+.1*GRAVE_X, startY+GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, /*e*/ startX+GRAVE_X-gap, startY+3*GRAVE_BASE_Y, startZ+GRAVE_Z-gap, /*cs*/ 54, 50, 149, 12);
-
+    }    
+    if(1){
         // square
         drawRectDivider( /*st*/ startX+gap+.2*GRAVE_X, startY+4*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, 
                         /*e*/ startX+.8*GRAVE_X-gap, startY+10*GRAVE_BASE_Y, startZ+gap+.2*GRAVE_X, /*cs*/ 137, 139, 159, 12);
-
-        // drawRectDivider( /*st*/ startX+.2*GRAVE_X, startY+3*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, /*e*/ startX+.8*GRAVE_X, startY+4*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, /*cs*/ 255, 255, 255, 12);
-    }    
-    // curved top on square
-    drawQuadraticBezierCurve(
-        /*st*/ startX+.2*GRAVE_X, startY+10*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X,
-        /*mid*/ startX+.5*GRAVE_X, startY+14*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X,
-        /*end*/ startX+.8*GRAVE_X, startY+10*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, 
-        /*rgbs*/ 255,255, 255, 32, /*noOfSegments*/ 36
-    );
+        // curved top on square
+        drawGraveCurve(
+            /*st*/ startX+.2*GRAVE_X, startY+10*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X,
+            /*mid*/ startX+.5*GRAVE_X, startY+14*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X,
+            /*end*/ startX+.8*GRAVE_X, startY+10*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, 
+            /*rgbs*/ 255,255, 255, 32, /*noOfSegments*/ 36
+        );
+    }
     return 0;
 }
 
@@ -621,7 +620,7 @@ float lengthX = 1000.0f;
 float lengthY = 1000.0f;
 float lengthZ = 1000.0f;
 
-int drawQuadraticBezierCurve( /*st*/ float sx, float sy, float sz, /*mid*/ float mx, float my, float mz, 
+int drawGraveCurve( /*st*/ float sx, float sy, float sz, /*mid*/ float mx, float my, float mz, 
     /*end*/ float ex, float ey, float ez, /*cs*/ int r, int g, int b, int shininess,
     int numSegments, int curveResolution, int angleSteps){
 
@@ -647,22 +646,31 @@ int drawQuadraticBezierCurve( /*st*/ float sx, float sy, float sz, /*mid*/ float
     std::vector<GLuint> indices;
 
     int noOfZSegments = 2;
-    float stepZ = (20.0f/lengthZ) / noOfZSegments;
+    float zLength = WALL_WIDTH/lengthZ;
+    float stepZ = zLength / noOfZSegments;
+
+    int midPointIndex = (numSegments+1) * (noOfZSegments+1);
 
     for (int i = 0; i <= numSegments; i++) {
         float t = static_cast<float>(i) / numSegments;
         glm::vec3 point = (1 - t) * (1 - t) * P0 + 2 * (1 - t) * t * P1 + t * t * P2; // Bezier formula
 
+        int nos = noOfZSegments+1;
+        if(i != 0){
+            indices.push_back(midPointIndex); indices.push_back((i-1)*nos); indices.push_back(i*nos);
+            indices.push_back(midPointIndex+1); indices.push_back(i*nos-1); indices.push_back((i+1)*nos-1);
+        }
+
         for(int j=0; j<=noOfZSegments; j++){
             // point
-            vertVec.push_back(point.x); vertVec.push_back(point.y); vertVec.push_back(point.z - j*stepZ);
+            vertVec.push_back(point.x); vertVec.push_back(point.y); vertVec.push_back(point.z + j*stepZ);
             // normal
             vertVec.push_back(0); vertVec.push_back(0); vertVec.push_back(1);
 
             if(i == 0) continue;
 
 
-            int nos = noOfZSegments+1;
+            
             // triangle index
             if(j != noOfZSegments){
                 indices.push_back(i*nos+j); indices.push_back((i-1)*nos+j); indices.push_back((i-1)*nos+j+1);
@@ -671,19 +679,15 @@ int drawQuadraticBezierCurve( /*st*/ float sx, float sy, float sz, /*mid*/ float
                 indices.push_back(i*nos+j); indices.push_back((i-1)*nos+j); indices.push_back(i*nos+j-1);
             }
         }
-
         // if(i==2) break;
     }
 
-    // print vertices (x,y,z) & indices
-    // std::cout << "Starting" << std::endl;
-    // for(int i=0; i<vertVec.size(); i+=6){
-    //     std::cout << i/6 <<": " << vertVec[i] << " " << vertVec[i+1] << " " << vertVec[i+2] << " " << vertVec[i+3] << " " << vertVec[i+4] << " " << vertVec[i+5] << std::endl;
-    // }
-    // for(int i=0; i<indices.size(); i+=3){
-    //     std::cout << i/3 <<": " << indices[i] << " " << indices[i+1] << " " << indices[i+2] << std::endl;
-    // }
-    // std::cout << "Ended" << std::endl;
+    // middle point front
+    vertVec.push_back((sx+ex)/2); vertVec.push_back((sy+ey)/2); vertVec.push_back((sz+ez)/2);
+    vertVec.push_back(0); vertVec.push_back(0); vertVec.push_back(1);
+    // middle point back
+    vertVec.push_back((sx+ex)/2); vertVec.push_back((sy+ey)/2); vertVec.push_back((sz+ez)/2 + zLength);
+    vertVec.push_back(0); vertVec.push_back(0); vertVec.push_back(1);
 
     // Set up the color
     glm::vec3 color(r / 255.0f, g / 255.0f, b / 255.0f);
