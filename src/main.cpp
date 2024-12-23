@@ -61,7 +61,13 @@ int repeatAlongX( float startX, float endX, /**/ float fixedY, float fixedZ, /**
 int repeatAlongZ( float startZ, float endZ, /**/ float fixedX, float fixedY, /**/ float widthX, float widthY, float widthZ, 
     int repeatCount, EndFill endFill, Shader ourShader = lightingShader, glm::mat4 identityMatrix = identityMatrix);
 int drawGrave(float startX, float startY, float startZ);
-int drawQuadraticBezierCurve(float sx, float sy, float sz, float mx, float my, float mz, float ex, float ey, float ez, int numSegments);
+
+int drawQuadraticBezierCurve(
+    float sx, float sy, float sz, 
+    float mx, float my, float mz, 
+    float ex, float ey, float ez, 
+    int r, int g, int b, int shinniness,
+    int numSegments, int curveResolution=100, int angleSteps=36);
 
 void ambienton_off(Shader& lightingShader);
 void diffuse_on_off(Shader& lightingShader);
@@ -572,6 +578,7 @@ int drawAll(){
     // Outside graveyard
     drawGrave( /*start*/ MIN_X+100, 20, MIN_Z+100);
 
+    return 0;
 }
 
 const float GRAVE_X = 80.0f;
@@ -579,82 +586,237 @@ const float GRAVE_BASE_Y = 5.0f;
 const float GRAVE_Z = 200.0f;
 int drawGrave(float startX, float startY, float startZ){
     float gap = 4.0f;
-    // base
-    drawRectDivider( /*st*/ startX, startY, startZ, /*e*/ startX+GRAVE_X, startY+GRAVE_BASE_Y, startZ+GRAVE_Z, /*cs*/ 182, 166, 151, 12);
+    if(0){
+        // base
+        drawRectDivider( /*st*/ startX, startY, startZ, /*e*/ startX+GRAVE_X, startY+GRAVE_BASE_Y, startZ+GRAVE_Z, /*cs*/ 182, 166, 151, 12);
 
-    // top base - left & right
-    drawRectDivider( /*st*/ startX+gap, startY+GRAVE_BASE_Y, startZ+gap, /*e*/ startX+gap+.1*GRAVE_X, startY+4*GRAVE_BASE_Y, startZ+GRAVE_Z-gap, /*cs*/ 137, 139, 159, 12);
-    drawRectDivider( /*st*/ startX+.9*GRAVE_X-gap, startY+GRAVE_BASE_Y, startZ+gap, /*e*/ startX-gap+GRAVE_X, startY+4*GRAVE_BASE_Y, startZ+GRAVE_Z-gap, /*cs*/ 137, 139, 159, 12);
-    
-    // top base - front & back
-    drawRectDivider( /*st*/ startX+gap+.1*GRAVE_X, startY+GRAVE_BASE_Y, startZ+gap, /*e*/ startX+.9*GRAVE_X-gap, startY+4*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, /*cs*/ 137, 139, 159, 12);
-    drawRectDivider( /*st*/ startX+gap+.1*GRAVE_X, startY+GRAVE_BASE_Y, startZ+GRAVE_Z-gap-.1*GRAVE_X, /*e*/ startX+.9*GRAVE_X-gap, startY+4*GRAVE_BASE_Y, startZ+GRAVE_Z-gap, /*cs*/ 137, 139, 159, 12);
+        // top base - left & right
+        drawRectDivider( /*st*/ startX+gap, startY+GRAVE_BASE_Y, startZ+gap, /*e*/ startX+gap+.1*GRAVE_X, startY+4*GRAVE_BASE_Y, startZ+GRAVE_Z-gap, /*cs*/ 137, 139, 159, 12);
+        drawRectDivider( /*st*/ startX+.9*GRAVE_X-gap, startY+GRAVE_BASE_Y, startZ+gap, /*e*/ startX-gap+GRAVE_X, startY+4*GRAVE_BASE_Y, startZ+GRAVE_Z-gap, /*cs*/ 137, 139, 159, 12);
+        
+        // top base - front & back
+        drawRectDivider( /*st*/ startX+gap+.1*GRAVE_X, startY+GRAVE_BASE_Y, startZ+gap, /*e*/ startX+.9*GRAVE_X-gap, startY+4*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, /*cs*/ 137, 139, 159, 12);
+        drawRectDivider( /*st*/ startX+gap+.1*GRAVE_X, startY+GRAVE_BASE_Y, startZ+GRAVE_Z-gap-.1*GRAVE_X, /*e*/ startX+.9*GRAVE_X-gap, startY+4*GRAVE_BASE_Y, startZ+GRAVE_Z-gap, /*cs*/ 137, 139, 159, 12);
 
-    // base mud
-    drawRectDivider( /*st*/ startX+gap+.1*GRAVE_X, startY+GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, /*e*/ startX+GRAVE_X-gap, startY+3*GRAVE_BASE_Y, startZ+GRAVE_Z-gap, /*cs*/ 54, 50, 149, 12);
+        // base mud
+        drawRectDivider( /*st*/ startX+gap+.1*GRAVE_X, startY+GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, /*e*/ startX+GRAVE_X-gap, startY+3*GRAVE_BASE_Y, startZ+GRAVE_Z-gap, /*cs*/ 54, 50, 149, 12);
 
-    // square
+        // square
+        drawRectDivider( /*st*/ startX+gap+.2*GRAVE_X, startY+4*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, 
+                        /*e*/ startX+.8*GRAVE_X-gap, startY+10*GRAVE_BASE_Y, startZ+gap+.2*GRAVE_X, /*cs*/ 137, 139, 159, 12);
+
+        // drawRectDivider( /*st*/ startX+.2*GRAVE_X, startY+3*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, /*e*/ startX+.8*GRAVE_X, startY+4*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, /*cs*/ 255, 255, 255, 12);
+    }    
+    // curved top on square
     drawQuadraticBezierCurve(
-        /*st*/ startX+.2*GRAVE_X, startY+4*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X,
-        /*mid*/ startX+.5*GRAVE_X, startY+8*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X,
-        /*end*/ startX+.8*GRAVE_X, startY+4*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, 10
+        /*st*/ startX+.2*GRAVE_X, startY+10*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X,
+        /*mid*/ startX+.5*GRAVE_X, startY+14*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X,
+        /*end*/ startX+.8*GRAVE_X, startY+10*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, 
+        /*rgbs*/ 255,255, 255, 32, /*noOfSegments*/ 36
     );
-    
+    return 0;
 }
 
 float lengthX = 1000.0f;
 float lengthY = 1000.0f;
 float lengthZ = 1000.0f;
 
-int drawQuadraticBezierCurve(float sx, float sy, float sz, float mx, float my, float mz, float ex, float ey, float ez, int numSegments) {
-    // Generate vertices for the Bézier curve
+int drawQuadraticBezierCurve( /*st*/ float sx, float sy, float sz, /*mid*/ float mx, float my, float mz, 
+    /*end*/ float ex, float ey, float ez, /*cs*/ int r, int g, int b, int shininess,
+    int numSegments, int curveResolution, int angleSteps){
+
     sx /= lengthX; sy /= lengthY; sz /= lengthZ; 
     mx /= lengthX; my /= lengthY; mz /= lengthZ;
     ex /= lengthX; ey /= lengthY; ez /= lengthZ;
 
-    glm::vec3 P0 = glm::vec3(sx,sy,sz); // Start point
-    glm::vec3 P1 = glm::vec3(mx,my,mz);   // Control point
-    glm::vec3 P2 = glm::vec3(ex,ey,ez);  // End point
+    glm::vec3 P0 = glm::vec3(sx, sy, sz); // Start point
+    glm::vec3 P1 = glm::vec3(mx, my, mz); // Control/Mid point
+    glm::vec3 P2 = glm::vec3(ex, ey, ez); // End point
 
-    std::vector<GLfloat> vertices;
+    GLuint VAO, VBO, EBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
-    vertices.push_back((sx+ex)/2);
-    vertices.push_back((sy+ey)/2);
-    vertices.push_back((sz+ez)/2);
+    // Bind VAO and VBO
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    // Generate vertices for the curve and create triangle fan vertices
+    std::vector<GLfloat> vertVec;
+    std::vector<GLuint> indices;
+
+    int noOfZSegments = 2;
+    float stepZ = (20.0f/lengthZ) / noOfZSegments;
 
     for (int i = 0; i <= numSegments; i++) {
         float t = static_cast<float>(i) / numSegments;
-        glm::vec3 point = (1 - t) * (1 - t) * P0 + 2 * (1 - t) * t * P1 + t * t * P2; // Bézier formula
-        vertices.push_back(point.x);
-        vertices.push_back(point.y);
-        vertices.push_back(point.z);
+        glm::vec3 point = (1 - t) * (1 - t) * P0 + 2 * (1 - t) * t * P1 + t * t * P2; // Bezier formula
+
+        for(int j=0; j<=noOfZSegments; j++){
+            // point
+            vertVec.push_back(point.x); vertVec.push_back(point.y); vertVec.push_back(point.z - j*stepZ);
+            // normal
+            vertVec.push_back(0); vertVec.push_back(0); vertVec.push_back(1);
+
+            if(i == 0) continue;
+
+
+            int nos = noOfZSegments+1;
+            // triangle index
+            if(j != noOfZSegments){
+                indices.push_back(i*nos+j); indices.push_back((i-1)*nos+j); indices.push_back((i-1)*nos+j+1);
+            }
+            if(j != 0){
+                indices.push_back(i*nos+j); indices.push_back((i-1)*nos+j); indices.push_back(i*nos+j-1);
+            }
+        }
+
+        // if(i==2) break;
     }
 
-    // Bind VAO and VBO
-    GLuint VAO, VBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    // print vertices (x,y,z) & indices
+    // std::cout << "Starting" << std::endl;
+    // for(int i=0; i<vertVec.size(); i+=6){
+    //     std::cout << i/6 <<": " << vertVec[i] << " " << vertVec[i+1] << " " << vertVec[i+2] << " " << vertVec[i+3] << " " << vertVec[i+4] << " " << vertVec[i+5] << std::endl;
+    // }
+    // for(int i=0; i<indices.size(); i+=3){
+    //     std::cout << i/3 <<": " << indices[i] << " " << indices[i+1] << " " << indices[i+2] << std::endl;
+    // }
+    // std::cout << "Ended" << std::endl;
 
-    glBindVertexArray(VAO);
+    // Set up the color
+    glm::vec3 color(r / 255.0f, g / 255.0f, b / 255.0f);
+
+    // Shader setup
+    lightingShader.use();
+    lightingShader.setVec3("material.ambient", color);
+    lightingShader.setVec3("material.diffuse", color);
+    lightingShader.setVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+    lightingShader.setFloat("material.shininess", shininess);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertVec.size() * sizeof(GLfloat), vertVec.data(), GL_STATIC_DRAW);
 
-    // Define vertex attributes
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+    // Set vertex attributes
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)0);  // position
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat))); // normal
+    glEnableVertexAttribArray(1);
 
-    // Use the shader and draw the curve
-    lightingShader.use();
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_LINE_STRIP, 0, numSegments + 1);
+    // Create and bind EBO (Element Buffer Object)
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
 
-    // Cleanup
+    // Draw the filled triangle fan
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+
+    // Unbind VAO, VBO, EBO
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+    // Delete buffers
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
     glDeleteVertexArrays(1, &VAO);
+
+    return 0;
 }
+
+
+// int drawQuadraticBezierCurve(
+//     float sx, float sy, float sz, 
+//     float mx, float my, float mz, 
+//     float ex, float ey, float ez, 
+//     int r, int g, int b, int shinniness,
+//     int numSegments, int curveResolution, int angleSteps){
+//     // Generate vertices for the Bézier curve
+//     sx /= lengthX; sy /= lengthY; sz /= lengthZ; 
+//     mx /= lengthX; my /= lengthY; mz /= lengthZ;
+//     ex /= lengthX; ey /= lengthY; ez /= lengthZ;
+
+//     glm::vec3 P0 = glm::vec3(sx,sy,sz); // Start point
+//     glm::vec3 P1 = glm::vec3(mx,my,mz);   // Control point
+//     glm::vec3 P2 = glm::vec3(ex,ey,ez);  // End point
+
+//     std::vector<GLfloat> vertVec;
+
+//     vertVec.push_back((sx+ex)/2);
+//     vertVec.push_back((sy+ey)/2);
+//     vertVec.push_back((sz+ez)/2);
+
+//     for (int i = 0; i <= numSegments; i++) {
+//         float t = static_cast<float>(i) / numSegments;
+//         glm::vec3 point = (1 - t) * (1 - t) * P0 + 2 * (1 - t) * t * P1 + t * t * P2; // Bézier formula
+//         vertVec.push_back(point.x);
+//         vertVec.push_back(point.y);
+//         vertVec.push_back(point.z);
+//     }
+
+//     GLfloat vertices[2*vertVec.size()];
+//     GLuint indices[vertVec.size()+1];
+
+
+//     for(int i=0; i<vertVec.size(); i+=3){
+//         vertices[2*i] = vertVec[i];
+//         vertices[2*i+1] = vertVec[i+1];
+//         vertices[2*i+2] = vertVec[i+2];
+//         // normal
+//         vertices[2*i+3] = 0; vertices[2*i+4] = 0; vertices[2*i+5] = 1;
+
+//         indices[i] = i;
+//         indices[i+1] = i+1;
+//         indices[i+2] = i+2;
+//     }
+//     indices[vertVec.size()] = 0;
+
+//     // Shader setup
+//     lightingShader.use();
+//     lightingShader.setVec3("material.ambient", glm::vec3(r, g, b));
+//     lightingShader.setVec3("material.diffuse", glm::vec3(r, g, b));
+//     lightingShader.setVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+//     lightingShader.setFloat("material.shininess", shinniness);
+//     lightingShader.setMat4("model", identityMatrix);
+
+//     // Generate and bind VAO
+//     GLuint VAO, VBO, EBO;
+//     glGenVertexArrays(1, &VAO);
+//     glGenBuffers(1, &VBO);
+//     glGenBuffers(1, &EBO);
+
+//     glBindVertexArray(VAO);
+
+//     // Vertex buffer object (VBO)
+//     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+//     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+//     // Element buffer object (EBO)
+//     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+//     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+//     // Vertex attributes (position and normal)
+//     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)0);
+//     glEnableVertexAttribArray(0);
+
+//     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
+//     glEnableVertexAttribArray(1);
+
+//     // Draw the cuboid
+//     glBindVertexArray(VAO);
+//     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+//     // Cleanup
+//     glBindBuffer(GL_ARRAY_BUFFER, 0);
+//     glBindVertexArray(0);
+
+//     glDeleteBuffers(1, &VBO);
+//     glDeleteBuffers(1, &EBO);
+//     glDeleteVertexArrays(1, &VAO);
+//     glDeleteVertexArrays(1, &VAO);
+    
+//     return 0;
+// }
 
 
 int repeatAlongX(
@@ -679,6 +841,8 @@ int repeatAlongX(
     
     // Filling right
     drawRectDivider( /*start pos*/ endX-widthX, fixedY,fixedZ, /*end pos*/ endX, fixedY+widthY, fixedZ+widthZ, /*color*/ 80, 70, 60, /*shine*/ 12);
+
+    return 0;
 }
 
 int repeatAlongZ(
@@ -703,6 +867,8 @@ int repeatAlongZ(
     
     // Filling right
     drawRectDivider( /*start pos*/ fixedX, fixedY, endZ-widthZ, /*end pos*/ fixedX+widthX, fixedY+widthY, endZ, /*color*/ 80, 70, 60, /*shine*/ 12);
+
+    return 0;
 }
 
 int drawRectDivider(
