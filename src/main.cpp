@@ -67,7 +67,7 @@ int drawGraveCurve(
     float mx, float my, float mz, 
     float ex, float ey, float ez, 
     int r, int g, int b, int shinniness,
-    int numSegments, int curveResolution=100, int angleSteps=36);
+    int numSegments, float zLength, int curveResolution=100, int angleSteps=36);
 
 void ambienton_off(Shader& lightingShader);
 void diffuse_on_off(Shader& lightingShader);
@@ -357,6 +357,11 @@ const float MIN_X = -800.0f, MAX_X = 1700.0f;
 const float MIN_Y = 0.0f, MAX_Y = 1000.0f;
 const float MIN_Z = 0.0f, MAX_Z = 1500.0f;
 
+const float GRAVE_X = 80.0f;
+const float GRAVE_BASE_Y = 5.0f;
+const float GRAVE_Z = 200.0f;
+const float GRAVE_GAP = 100.0f;
+
 int drawAll(){
     // draw rectangle
 
@@ -366,7 +371,7 @@ int drawAll(){
     drawRectDivider(/*start*/ -800, 0, 0,/*end*/ 1700, 20, 1500, /*color-shine*/ 112, 84, 62, 32, /*repeat*/1, 1, 10 );
 
     // All walls
-    if(0)
+    if(1)
     {
         // right wall
         drawRectDivider( /*start*/ MAX_X-WALL_WIDTH, WALL_WIDTH, MIN_Z, /*end pos*/ MAX_X, 200, MAX_Z-WALL_WIDTH, /*color*/ 139, 79, 57, /*shine*/ 32,
@@ -391,7 +396,7 @@ int drawAll(){
     }
 
     // building base & stairs
-    if(0){
+    if(1){
         // building base - main
         drawRectDivider( /*start pos*/ 100,20,100, /*end pos*/ 900, 20.0f+BASE_HEIGHT, 850, /*color*/ 90, 60, 40, /*shine*/ 10);
 
@@ -407,7 +412,7 @@ int drawAll(){
     }
 
     // Ceiling of two stores
-    if(0){
+    if(1){
         // ceiling of first store
         drawRectDivider( /*start pos*/ 100,20+BASE_HEIGHT+FLOOR_HEIGHT,100, /*end pos*/ 900, 20+BASE_HEIGHT+FLOOR_HEIGHT+20, 850, /*color*/ 60, 50, 40, /*shine*/ 5);
 
@@ -418,7 +423,7 @@ int drawAll(){
     }
 
     // Piller && Supporting pillers
-    if(0){
+    if(1){
         float pillerWidthX = 10.0f;
         float pillerWidthZ = 15.0f;
 
@@ -532,7 +537,7 @@ int drawAll(){
     }
 
     // Room - first floor
-    if(0){
+    if(1){
         int wr = 70, wg = 55, wb = 45;
         // left wall
         drawRectDivider(/*st*/ 200, UPTO_BASE_HEIGHT, 250, /*e*/ 200+WALL_WIDTH, UPTO_BASE_HEIGHT + FLOOR_HEIGHT, 600,/*cs*/ wr,wg,wb,6);
@@ -559,7 +564,7 @@ int drawAll(){
     }
 
     // Building door - first floor
-    if(0){
+    if(1){
         int wr = 45, wg = 30, wb = 20, sh = 10;
         // left bar
         drawRectDivider(/*st*/ 550, UPTO_BASE_HEIGHT, 600, /*e*/ 550+WALL_WIDTH, UPTO_BASE_HEIGHT + DOOR_HEIGHT, 600+WALL_WIDTH,/*cs*/ wr,wg,wb,sh);
@@ -576,17 +581,21 @@ int drawAll(){
     }
 
     // Outside graveyard
-    drawGrave( /*start*/ MIN_X+100, 20, MIN_Z+100);
+    int noOfGravesX = 2;
+    int noOfGravesZ = 4;
+    for(int i=0; i<noOfGravesX; i++){
+        for(int j=0; j<noOfGravesZ; j++){
+            drawGrave( /*start*/ MIN_X+100+i*(GRAVE_X+GRAVE_GAP), 20, MIN_Z+100+j*(GRAVE_Z+GRAVE_GAP));
+        }
+    }
 
     return 0;
 }
 
-const float GRAVE_X = 80.0f;
-const float GRAVE_BASE_Y = 5.0f;
-const float GRAVE_Z = 200.0f;
+
 int drawGrave(float startX, float startY, float startZ){
     float gap = 4.0f;
-    if(0){
+    if(1){
         // base
         drawRectDivider( /*st*/ startX, startY, startZ, /*e*/ startX+GRAVE_X, startY+GRAVE_BASE_Y, startZ+GRAVE_Z, /*cs*/ 182, 166, 151, 12);
 
@@ -599,18 +608,19 @@ int drawGrave(float startX, float startY, float startZ){
         drawRectDivider( /*st*/ startX+gap+.1*GRAVE_X, startY+GRAVE_BASE_Y, startZ+GRAVE_Z-gap-.1*GRAVE_X, /*e*/ startX+.9*GRAVE_X-gap, startY+4*GRAVE_BASE_Y, startZ+GRAVE_Z-gap, /*cs*/ 137, 139, 159, 12);
 
         // base mud
-        drawRectDivider( /*st*/ startX+gap+.1*GRAVE_X, startY+GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, /*e*/ startX+GRAVE_X-gap, startY+3*GRAVE_BASE_Y, startZ+GRAVE_Z-gap, /*cs*/ 54, 50, 149, 12);
-    }    
+        drawRectDivider( /*st*/ startX+gap+.1*GRAVE_X, startY+GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, /*e*/ startX+.9*GRAVE_X-gap, startY+3*GRAVE_BASE_Y, startZ+GRAVE_Z-gap, /*cs*/ 54, 50, 149, 12);
+    }
+    
     if(1){
         // square
         drawRectDivider( /*st*/ startX+gap+.2*GRAVE_X, startY+4*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, 
-                        /*e*/ startX+.8*GRAVE_X-gap, startY+10*GRAVE_BASE_Y, startZ+gap+.2*GRAVE_X, /*cs*/ 137, 139, 159, 12);
+                        /*e*/ startX+.8*GRAVE_X-gap, startY+10*GRAVE_BASE_Y, startZ+gap+.2*GRAVE_X, /*cs*/ 78, 79, 88, 4);
         // curved top on square
         drawGraveCurve(
-            /*st*/ startX+.2*GRAVE_X, startY+10*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X,
+            /*st*/ startX+gap+.2*GRAVE_X, startY+10*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X,
             /*mid*/ startX+.5*GRAVE_X, startY+14*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X,
-            /*end*/ startX+.8*GRAVE_X, startY+10*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, 
-            /*rgbs*/ 255,255, 255, 32, /*noOfSegments*/ 36
+            /*end*/ startX+.8*GRAVE_X-gap, startY+10*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, 
+            /*rgbs*/ 70, 70, 70, 4, /*noOfSegments*/ 36, /*zLength*/ .1*GRAVE_X
         );
     }
     return 0;
@@ -622,7 +632,9 @@ float lengthZ = 1000.0f;
 
 int drawGraveCurve( /*st*/ float sx, float sy, float sz, /*mid*/ float mx, float my, float mz, 
     /*end*/ float ex, float ey, float ez, /*cs*/ int r, int g, int b, int shininess,
-    int numSegments, int curveResolution, int angleSteps){
+    int numSegments, float zLength, int curveResolution, int angleSteps){
+    
+    zLength /= lengthZ;
 
     sx /= lengthX; sy /= lengthY; sz /= lengthZ; 
     mx /= lengthX; my /= lengthY; mz /= lengthZ;
@@ -646,7 +658,7 @@ int drawGraveCurve( /*st*/ float sx, float sy, float sz, /*mid*/ float mx, float
     std::vector<GLuint> indices;
 
     int noOfZSegments = 2;
-    float zLength = WALL_WIDTH/lengthZ;
+    
     float stepZ = zLength / noOfZSegments;
 
     int midPointIndex = (numSegments+1) * (noOfZSegments+1);
