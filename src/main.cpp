@@ -345,42 +345,41 @@ const float DOOR_HEIGHT = 220.0f;
 const float GAP = 4.0f;
 const float KEY_WIDTH = 15.0f;
 
+const float MIN_X = -800.0f, MAX_X = 1700.0f;
+const float MIN_Y = 0.0f, MAX_Y = 1000.0f;
+const float MIN_Z = 0.0f, MAX_Z = 1500.0f;
+
 int drawAll(){
     // draw rectangle
 
     // My canvas is of 1000 x 1000 x 1000
     
     // Ground
-    drawRectDivider(
-        0, 0, 0,
-        1000, 20, 1000,
-        112, 84, 62, 32,
-        1, 1, 10
-    );
+    drawRectDivider(/*start*/ -800, 0, 0,/*end*/ 1700, 20, 1500, /*color-shine*/ 112, 84, 62, 32, /*repeat*/1, 1, 10 );
 
     // All walls
-    if(0) // don't draw now
+    if(1)
     {
         // right wall
-        drawRectDivider( /*start*/ 1000-WALL_WIDTH, WALL_WIDTH, 0, /*end pos*/ 1000, 200, 1000-WALL_WIDTH, /*color*/ 139, 79, 57, /*shine*/ 32,
+        drawRectDivider( /*start*/ MAX_X-WALL_WIDTH, WALL_WIDTH, MIN_Z, /*end pos*/ MAX_X, 200, MAX_Z-WALL_WIDTH, /*color*/ 139, 79, 57, /*shine*/ 32,
             1,10,1
         );
         // left wall
-        drawRectDivider( /*start*/ 0, 20, 0, /*end*/ WALL_WIDTH, 200, 1000-WALL_WIDTH, /*color*/ 139, 79, 57, /*shine*/ 32, 1,10,1);
+        drawRectDivider( /*start*/ MIN_X, 20, MIN_Z, /*end*/ MIN_X+WALL_WIDTH, 200, MAX_Z-WALL_WIDTH, /*color*/ 139, 79, 57, /*shine*/ 32, 1,10,1);
 
         // back wall
-        drawRectDivider( /*start*/ WALL_WIDTH, 20, 0, /*end*/ 1000-WALL_WIDTH, 200, WALL_WIDTH, /*color*/ 139, 79, 57, /*shine*/ 32, 
+        drawRectDivider( /*start*/ MIN_X+WALL_WIDTH, 20, MIN_Z, /*end*/ MAX_X-WALL_WIDTH, 200, MIN_Z+WALL_WIDTH, /*color*/ 139, 79, 57, /*shine*/ 32, 
             1,10,1
         );
 
         // front wall - left half
-        drawRectDivider( /*start*/ 0, 20, 1000-WALL_WIDTH, /*end*/ 400, 200, 1000, /*color*/ 139, 79, 57, /*shine*/ 32, 1,10,1);
+        drawRectDivider( /*start*/ MIN_X, 20, MAX_Z-WALL_WIDTH, /*end*/ 400, 200, MAX_Z, /*color*/ 139, 79, 57, /*shine*/ 32, 1,10,1);
         // left side piller
-        drawRectDivider( /*start*/ 400, 20, 1000, /*end*/ 400+WALL_WIDTH, 200, 1000, /*color*/ 143, 127, 132, /*shine*/ 32);
+        drawRectDivider( /*start*/ 400, 20, MAX_Z, /*end*/ 400+WALL_WIDTH, 200, MAX_Z, /*color*/ 143, 127, 132, /*shine*/ 32);
         // right side piller
-        drawRectDivider( /*start*/ 600-WALL_WIDTH, 20, 1000, /*end*/ 600, 200, 1000, /*color*/ 143, 127, 132, /*shine*/ 32);
+        drawRectDivider( /*start*/ 600-WALL_WIDTH, 20, MAX_Z, /*end*/ 600, 200, MAX_Z, /*color*/ 143, 127, 132, /*shine*/ 32);
         // front wall - right half
-        drawRectDivider( /*start*/ 600, 20, 1000-WALL_WIDTH, /*end*/ 1000, 200, 1000, /*color*/ 139, 79, 57, /*shine*/ 32, 1, 10, 1);
+        drawRectDivider( /*start*/ 600, 20, MAX_Z-WALL_WIDTH, /*end*/ MAX_X, 200, MAX_Z, /*color*/ 139, 79, 57, /*shine*/ 32, 1, 10, 1);
     }
 
     // building base & stairs
