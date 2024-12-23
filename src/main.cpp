@@ -371,7 +371,7 @@ int drawAll(){
     drawRectDivider(/*start*/ -800, 0, 0,/*end*/ 1700, 20, 1500, /*color-shine*/ 112, 84, 62, 32, /*repeat*/1, 1, 10 );
 
     // All walls
-    if(1)
+    if(0)
     {
         // right wall
         drawRectDivider( /*start*/ MAX_X-WALL_WIDTH, WALL_WIDTH, MIN_Z, /*end pos*/ MAX_X, 200, MAX_Z-WALL_WIDTH, /*color*/ 139, 79, 57, /*shine*/ 32,
@@ -412,7 +412,7 @@ int drawAll(){
     }
 
     // Ceiling of two stores
-    if(1){
+    if(0){
         // ceiling of first store
         drawRectDivider( /*start pos*/ 100,20+BASE_HEIGHT+FLOOR_HEIGHT,100, /*end pos*/ 900, 20+BASE_HEIGHT+FLOOR_HEIGHT+20, 850, /*color*/ 60, 50, 40, /*shine*/ 5);
 
@@ -423,7 +423,7 @@ int drawAll(){
     }
 
     // Piller && Supporting pillers
-    if(1){
+    if(0){
         float pillerWidthX = 10.0f;
         float pillerWidthZ = 15.0f;
 
@@ -537,7 +537,7 @@ int drawAll(){
     }
 
     // Room - first floor
-    if(1){
+    if(0){
         int wr = 70, wg = 55, wb = 45;
         // left wall
         drawRectDivider(/*st*/ 200, UPTO_BASE_HEIGHT, 250, /*e*/ 200+WALL_WIDTH, UPTO_BASE_HEIGHT + FLOOR_HEIGHT, 600,/*cs*/ wr,wg,wb,6);
@@ -564,7 +564,7 @@ int drawAll(){
     }
 
     // Building door - first floor
-    if(1){
+    if(0){
         int wr = 45, wg = 30, wb = 20, sh = 10;
         // left bar
         drawRectDivider(/*st*/ 550, UPTO_BASE_HEIGHT, 600, /*e*/ 550+WALL_WIDTH, UPTO_BASE_HEIGHT + DOOR_HEIGHT, 600+WALL_WIDTH,/*cs*/ wr,wg,wb,sh);
@@ -580,12 +580,14 @@ int drawAll(){
         drawRectDivider(/*st*/ 650-4*GAP-KEY_WIDTH, UPTO_BASE_HEIGHT+DOOR_HEIGHT/2, 600+WALL_WIDTH, /*e*/ 650-4*GAP, UPTO_BASE_HEIGHT+DOOR_HEIGHT/2+KEY_WIDTH, 600+WALL_WIDTH+5,/*cs*/ 0, 0, 0, 5);
     }
 
-    // Outside graveyard
-    int noOfGravesX = 2;
-    int noOfGravesZ = 4;
-    for(int i=0; i<noOfGravesX; i++){
-        for(int j=0; j<noOfGravesZ; j++){
-            drawGrave( /*start*/ MIN_X+100+i*(GRAVE_X+GRAVE_GAP), 20, MIN_Z+100+j*(GRAVE_Z+GRAVE_GAP));
+    if(0){
+        // Outside graveyard
+        int noOfGravesX = 2;
+        int noOfGravesZ = 4;
+        for(int i=0; i<noOfGravesX; i++){
+            for(int j=0; j<noOfGravesZ; j++){
+                drawGrave( /*start*/ MIN_X+100+i*(GRAVE_X+GRAVE_GAP), 20, MIN_Z+100+j*(GRAVE_Z+GRAVE_GAP));
+            }
         }
     }
 
@@ -610,7 +612,7 @@ int drawGrave(float startX, float startY, float startZ){
         // base mud
         drawRectDivider( /*st*/ startX+gap+.1*GRAVE_X, startY+GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, /*e*/ startX+.9*GRAVE_X-gap, startY+3*GRAVE_BASE_Y, startZ+GRAVE_Z-gap, /*cs*/ 54, 50, 149, 12);
     }
-    
+
     if(1){
         // square
         drawRectDivider( /*st*/ startX+gap+.2*GRAVE_X, startY+4*GRAVE_BASE_Y, startZ+gap+.1*GRAVE_X, 
